@@ -1,7 +1,7 @@
 // config
 export const DEBUG = false
-export const WIDTH = 320
-export const HEIGHT = 180
+export const WIDTH = 1280
+export const HEIGHT = 720
 export const JOYSTICK_SIZE = 30
 export const JOYSTICK_THUMB_SIZE = 10
 
