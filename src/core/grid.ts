@@ -26,11 +26,11 @@ export const createRenderables = (
 }
 
 export const renderGrid = (
-    gl: WebGL2RenderingContext,
+    ctx: CanvasRenderingContext2D,
     renderables: RenderableItem[],
     cellSize: number,
 ) => {
     for (const item of renderables) {
-        drawRect(gl, item.x, item.y, cellSize, cellSize)
+        drawRect(ctx, item.x, item.y, cellSize, cellSize)
     }
 }

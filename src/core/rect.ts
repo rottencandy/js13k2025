@@ -82,6 +82,17 @@ void main() {
 }
 
 export const drawRect = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+) => {
+    ctx.fillStyle = "red"
+    ctx.fillRect(x, y, width, height)
+}
+
+export const drawRectGL = (
     gl: WebGL2RenderingContext,
     x: number,
     y: number,
