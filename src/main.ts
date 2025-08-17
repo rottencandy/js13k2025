@@ -1,11 +1,8 @@
 import { HEIGHT, WIDTH } from "./const"
 import { resize } from "./core/canvas"
-import { initLevel, renderLevel } from "./level"
 import { loop } from "./core/loop"
-import { levelData } from "./data/level-data"
-import { initPlayer, updatePlayer, renderPlayer } from "./player"
 import { initInput } from "./core/input"
-import { initState } from "./state"
+import { loadLevel, updateLevel, renderLevel } from "./level-manager"
 
 const canvas = document.getElementById("c") as HTMLCanvasElement
 
@@ -23,16 +20,14 @@ if (innerWidth < innerHeight) {
 // Initialize core components
 const checkInput = initInput(canvas, WIDTH, HEIGHT)
 
-// Initialize game components
-initLevel(levelData)
-initState()
-initPlayer()
+// Load initial level
+loadLevel(0)
 
 loop(
     // physics step
     (dt) => {
         checkInput()
-        updatePlayer(dt)
+        updateLevel(dt)
     },
     // render step
     () => {
@@ -40,6 +35,5 @@ loop(
         ctx.fillRect(0, 0, WIDTH, HEIGHT)
 
         renderLevel(ctx)
-        renderPlayer(ctx)
     },
 )

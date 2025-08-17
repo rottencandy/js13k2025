@@ -21,8 +21,8 @@ let isMoving = false
 let isFalling = false
 let moveProgress = 0
 
-export const initPlayer = () => {
-    playerRects = [{ x: 0, y: 0, dx: 0, dy: 0 }]
+export const initPlayer = (x: number = 0, y: number = 0) => {
+    playerRects = [{ x, y, dx: 0, dy: 0 }]
     isMoving = false
     isFalling = false
     moveProgress = 0
