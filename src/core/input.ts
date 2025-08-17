@@ -3,6 +3,7 @@ export const keys = {
         spc: false,
         esc: false,
         clk: false,
+        z: false,
     },
     btnp: {
         up: false,
@@ -12,6 +13,7 @@ export const keys = {
         spc: false,
         clk: false,
         esc: false,
+        z: false,
     },
 }
 
@@ -40,6 +42,7 @@ export const initInput = (
         spc: false,
         clk: false,
         esc: false,
+        z: false,
     }
 
     const setKeyState =
@@ -63,11 +66,15 @@ export const initInput = (
                 case "KeyD":
                     dirPressed.rt = pressed
                     break
+                case "KeyZ":
+                    keys.btn.z = pressed
+                    break
                 case "Escape":
                     keys.btn.esc = pressed
                     break
                 case "Space":
                     keys.btn.spc = pressed
+                    break
             }
         }
 
@@ -102,6 +109,7 @@ export const initInput = (
         keys.btnp.clk = keys.btn.clk && !lastFrame.clk
         keys.btnp.esc = keys.btn.esc && !lastFrame.esc
         keys.btnp.spc = keys.btn.spc && !lastFrame.spc
+        keys.btnp.z = keys.btn.z && !lastFrame.z
 
         lastFrame.up = dirPressed.up
         lastFrame.dn = dirPressed.dn
@@ -110,5 +118,6 @@ export const initInput = (
         lastFrame.clk = keys.btn.clk
         lastFrame.esc = keys.btn.esc
         lastFrame.spc = keys.btn.spc
+        lastFrame.z = keys.btn.z
     }
 }

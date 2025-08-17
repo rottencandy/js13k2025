@@ -5,6 +5,7 @@ import {
     GL_TRIANGLES,
 } from "./gl-constants"
 import { createShaderProgram } from "./webgl"
+import { camera } from "../camera"
 
 let shaderProgram: WebGLProgram
 let vao: WebGLVertexArrayObject
@@ -89,7 +90,7 @@ export const drawRect = (
     height: number,
 ) => {
     ctx.fillStyle = "red"
-    ctx.fillRect(x, y, width, height)
+    ctx.fillRect(x - camera.x, y - camera.y, width, height)
 }
 
 export const drawRectGL = (
