@@ -1,0 +1,141 @@
+import { CELL_SIZE } from "./const"
+import { keys } from "./core/input"
+import { isCollision } from "./level"
+import { state } from "./state"
+
+const MOVE_SPEED = 0.005
+const FALL_SPEED = 0.008
+
+type Rect = {
+    // position
+    x: number
+    y: number
+    // direction of next movement
+    dx: number
+    dy: number
+}
+
+let playerRects: Rect[] = [{ x: 0, y: 0, dx: 0, dy: 0 }]
+
+let isMoving = false
+let isFalling = false
+let moveProgress = 0
+
+export const initPlayer = () => {
+    playerRects = [{ x: 0, y: 0, dx: 0, dy: 0 }]
+    isMoving = false
+    isFalling = false
+    moveProgress = 0
+}
+
+const playerAtPos = (x: number, y: number) => {
+    return playerRects.some((r) => r.x === x && r.y === y)
+}
+
+const handleExpand = (dirX: number, dirY: number) => {
+    const head = playerRects[0]
+    const newRectX = head.x + dirX
+    const newRectY = head.y + dirY
+    if (!isCollision(newRectX, newRectY) && !playerAtPos(newRectX, newRectY)) {
+        playerRects.unshift({ x: newRectX, y: newRectY, dx: 0, dy: 0 })
+    }
+}
+
+const handleMove = (dirX: number, dirY: number) => {
+    const head = playerRects[0]
+    const newRectX = head.x + dirX
+    const newRectY = head.y + dirY
+    if (!isCollision(newRectX, newRectY) && !playerAtPos(newRectX, newRectY)) {
+        isMoving = true
+        moveProgress = 0
+        // store directions for all rects
+        playerRects[0].dx = dirX
+        playerRects[0].dy = dirY
+        for (let i = 1; i < playerRects.length; i++) {
+            const rect = playerRects[i]
+            const prevRect = playerRects[i - 1]
+            rect.dx = prevRect.x - rect.x
+            rect.dy = prevRect.y - rect.y
+        }
+    }
+}
+
+const handleDirectionInput = (dirX: number, dirY: number) => {
+    if (state.expandMode) {
+        handleExpand(dirX, dirY)
+    } else {
+        handleMove(dirX, dirY)
+    }
+}
+
+export const updatePlayer = (deltaTime: number) => {
+    const isAnimating = isMoving || isFalling
+
+    // Only allow movement if not currently moving or falling
+    if (!isAnimating) {
+        if (keys.btnp.up) {
+            handleDirectionInput(0, -1)
+        } else if (keys.btnp.dn) {
+            handleDirectionInput(0, +1)
+        } else if (keys.btnp.lf) {
+            handleDirectionInput(-1, 0)
+        } else if (keys.btnp.rt) {
+            handleDirectionInput(+1, 0)
+        } else if (keys.btnp.spc) {
+            state.expandMode = !state.expandMode
+        }
+    }
+
+    // Update movement interpolation (only in move mode when moving all rects)
+    if (isAnimating) {
+        const moveAmount = isFalling
+            ? FALL_SPEED * deltaTime
+            : MOVE_SPEED * deltaTime
+
+        moveProgress += moveAmount
+
+        // Movement complete - update actual positions
+        if (moveProgress >= 1) {
+            for (let i = 0; i < playerRects.length; i++) {
+                const rect = playerRects[i]
+                rect.x += rect.dx
+                rect.y += rect.dy
+                rect.dx = 0
+                rect.dy = 0
+            }
+
+            moveProgress = 0
+            isMoving = false
+
+            // Check if player should be falling
+            const shouldFall = playerRects.every(
+                (rect) => !isCollision(rect.x, rect.y + 1),
+            )
+            if (shouldFall) {
+                playerRects.forEach((r) => (r.dy = 1))
+                isFalling = true
+                isMoving = true
+            } else {
+                isFalling = false
+            }
+        }
+    }
+}
+
+export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
+    for (let i = 0; i < playerRects.length; i++) {
+        const rect = playerRects[i]
+        ctx.fillStyle =
+            i === 0 ? (state.expandMode ? "lightgreen" : "lightblue") : "blue"
+
+        const renderX = rect.x + rect.dx * moveProgress
+        const renderY = rect.y + rect.dy * moveProgress
+
+        ctx.fillRect(
+            renderX * CELL_SIZE,
+            renderY * CELL_SIZE,
+            CELL_SIZE,
+            CELL_SIZE,
+        )
+    }
+}

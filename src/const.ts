@@ -24,3 +24,6 @@ export const BROWN = "#7b7243"
 export const LGREEN = "#a2dcc7"
 export const DGREEN = "#567b79"
 export const DDGREEN = "#4e584a"
+
+// game
+export const CELL_SIZE = 100

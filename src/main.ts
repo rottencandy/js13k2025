@@ -1,8 +1,11 @@
 import { HEIGHT, WIDTH } from "./const"
 import { resize } from "./core/canvas"
-import { createRenderables, renderGrid } from "./core/grid"
+import { initLevel, renderLevel } from "./level"
 import { loop } from "./core/loop"
-import { gridData } from "./data/grid-data"
+import { levelData } from "./data/level-data"
+import { initPlayer, updatePlayer, renderPlayer } from "./player"
+import { initInput } from "./core/input"
+import { initState } from "./state"
 
 const canvas = document.getElementById("c") as HTMLCanvasElement
 
@@ -17,20 +20,26 @@ if (innerWidth < innerHeight) {
     resize(canvas, WIDTH, HEIGHT)
 })()
 
-// Grid configuration
-const CELL_SIZE = 100
+// Initialize core components
+const checkInput = initInput(canvas, WIDTH, HEIGHT)
 
-// Create renderable items array once
-const renderables = createRenderables(gridData, CELL_SIZE)
+// Initialize game components
+initLevel(levelData)
+initState()
+initPlayer()
 
 loop(
     // physics step
-    (dt) => {},
+    (dt) => {
+        checkInput()
+        updatePlayer(dt)
+    },
     // render step
     () => {
         ctx.fillStyle = "#1a1a1a"
         ctx.fillRect(0, 0, WIDTH, HEIGHT)
 
-        renderGrid(ctx, renderables, CELL_SIZE)
+        renderLevel(ctx)
+        renderPlayer(ctx)
     },
 )
