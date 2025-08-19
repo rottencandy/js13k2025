@@ -1,8 +1,9 @@
 import { CELL_SIZE } from "./const"
 import { keys } from "./core/input"
-import { isCollision } from "./level"
+import { isCollision, isWinBlock, isLoseBlock } from "./level"
 import { state } from "./state"
 import { camera } from "./camera"
+import { setScene, Scene } from "./scene-manager"
 
 const MOVE_SPEED = 0.005
 const FALL_SPEED = 0.008
@@ -141,6 +142,16 @@ export const updatePlayer = (deltaTime: number) => {
             } else {
                 isFalling = false
             }
+
+            // Check win condition after movement completes
+            if (checkWinCondition()) {
+                setScene(Scene.Title)
+            }
+
+            // Check lose condition after movement completes
+            if (checkLoseCondition()) {
+                undoLastMove()
+            }
         }
     }
 }
@@ -161,4 +172,12 @@ export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
             CELL_SIZE,
         )
     }
+}
+
+export const checkWinCondition = (): boolean => {
+    return playerRects.some((rect) => isWinBlock(rect.x, rect.y))
+}
+
+export const checkLoseCondition = (): boolean => {
+    return playerRects.some((rect) => isLoseBlock(rect.x, rect.y))
 }

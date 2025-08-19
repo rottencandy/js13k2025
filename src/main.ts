@@ -2,7 +2,7 @@ import { HEIGHT, WIDTH } from "./const"
 import { resize } from "./core/canvas"
 import { loop } from "./core/loop"
 import { initInput } from "./core/input"
-import { loadLevel, updateLevel, renderLevel } from "./level-manager"
+import { updateScene, renderScene } from "./scene-manager"
 
 const canvas = document.getElementById("c") as HTMLCanvasElement
 
@@ -20,20 +20,17 @@ if (innerWidth < innerHeight) {
 // Initialize core components
 const checkInput = initInput(canvas, WIDTH, HEIGHT)
 
-// Load initial level
-loadLevel(0)
-
 loop(
     // physics step
     (dt) => {
         checkInput()
-        updateLevel(dt)
+        updateScene(dt)
     },
     // render step
     () => {
         ctx.fillStyle = "#1a1a1a"
         ctx.fillRect(0, 0, WIDTH, HEIGHT)
 
-        renderLevel(ctx)
+        renderScene(ctx, WIDTH, HEIGHT)
     },
 )
