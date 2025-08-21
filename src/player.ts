@@ -145,7 +145,7 @@ export const updatePlayer = (deltaTime: number) => {
 
             // Check win condition after movement completes
             if (checkWinCondition()) {
-                setScene(Scene.Title)
+                setScene(Scene.LevelSelect)
             }
 
             // Check lose condition after movement completes

@@ -1,4 +1,6 @@
 export const keys = {
+    ptr: { x: 0, y: 0 },
+    ptrDown: { x: 0, y: 0 },
     btn: {
         spc: false,
         esc: false,
@@ -25,7 +27,6 @@ export const initInput = (
     width: number,
     height: number,
 ) => {
-    let dirty = false
     let gamepad: Gamepad | undefined = undefined
     const hasTouch = "ontouchstart" in window
     const dirPressed = {
@@ -48,7 +49,6 @@ export const initInput = (
     const setKeyState =
         (pressed: boolean) =>
         ({ code }: { code: string }) => {
-            dirty = true
             switch (code) {
                 case "ArrowUp":
                 case "KeyW":
@@ -100,6 +100,28 @@ export const initInput = (
 
     canvas.onpointerdown = () => (keys.btn.clk = true)
     canvas.onpointerup = () => (keys.btn.clk = false)
+    canvas.onpointermove = (e) => {
+        const ratio = Math.min(innerWidth / width, innerHeight / height)
+        keys.ptr.x = e.offsetX / ratio
+        keys.ptr.y = e.offsetY / ratio
+    }
+
+    if (hasTouch) {
+        canvas.ontouchstart =
+            canvas.ontouchmove =
+            canvas.ontouchend =
+            canvas.ontouchcancel =
+                (e) => {
+                    e.preventDefault()
+                    if (keys.btn.clk) {
+                        const offset = canvas.getBoundingClientRect()
+                        const touch = e.touches[0]
+                        const ratio = Math.min(innerWidth / width, innerHeight / height)
+                        keys.ptr.x = (touch.clientX - offset.left) / ratio
+                        keys.ptr.y = (touch.clientY - offset.top) / ratio
+                    }
+                }
+    }
 
     return () => {
         keys.btnp.up = dirPressed.up && !lastFrame.up
@@ -119,5 +141,12 @@ export const initInput = (
         lastFrame.esc = keys.btn.esc
         lastFrame.spc = keys.btn.spc
         lastFrame.z = keys.btn.z
+
+        if (keys.btn.clk) {
+            keys.ptrDown = {
+                x: keys.ptr.x,
+                y: keys.ptr.y,
+            }
+        }
     }
 }

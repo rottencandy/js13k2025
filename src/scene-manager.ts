@@ -1,8 +1,10 @@
 import { loadLevel, updateLevel, renderLevel } from "./level-manager"
 import { updateTitleScreen, renderTitleScreen } from "./title-screen"
+import { updateLevelSelect, renderLevelSelect } from "./level-select"
 
 export const enum Scene {
     Title,
+    LevelSelect,
     Game
 }
 
@@ -25,6 +27,9 @@ export const updateScene = (deltaTime: number) => {
         case Scene.Title:
             updateTitleScreen()
             break
+        case Scene.LevelSelect:
+            updateLevelSelect()
+            break
         case Scene.Game:
             updateLevel(deltaTime)
             break
@@ -35,6 +40,9 @@ export const renderScene = (ctx: CanvasRenderingContext2D, width: number, height
     switch (currentScene) {
         case Scene.Title:
             renderTitleScreen(ctx, width, height)
+            break
+        case Scene.LevelSelect:
+            renderLevelSelect(ctx, width, height)
             break
         case Scene.Game:
             renderLevel(ctx)
