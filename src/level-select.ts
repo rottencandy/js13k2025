@@ -10,19 +10,48 @@ const START_X = 50
 const START_Y = 150
 const COLS = Math.floor((800 - PADDING * 2) / (GRID_SIZE + PADDING))
 
+let selectedLevel = 0
+
 export const updateLevelSelect = () => {
     if (keys.btnp.esc) {
         setScene(Scene.Title)
         return
     }
 
+    // Handle keyboard navigation
+    if (keys.btnp.lf) {
+        selectedLevel = Math.max(0, selectedLevel - 1)
+    }
+    if (keys.btnp.rt) {
+        selectedLevel = Math.min(levelsData.length - 1, selectedLevel + 1)
+    }
+    if (keys.btnp.up) {
+        selectedLevel = Math.max(0, selectedLevel - COLS)
+    }
+    if (keys.btnp.dn) {
+        selectedLevel = Math.min(levelsData.length - 1, selectedLevel + COLS)
+    }
+
+    // Handle level selection with space or enter
+    if (keys.btnp.spc) {
+        loadLevel(selectedLevel)
+        setScene(Scene.Game)
+    }
+
     // Handle level selection with pointer
     if (keys.btn.clk) {
         const levelIndex = getLevelAtPosition(keys.ptr.x, keys.ptr.y)
         if (levelIndex >= 0 && levelIndex < levelsData.length) {
+            selectedLevel = levelIndex
             loadLevel(levelIndex)
             setScene(Scene.Game)
         }
+    }
+
+    // Update selected level on hover
+    const hoveredLevel = getLevelAtPosition(keys.ptr.x, keys.ptr.y)
+    if (hoveredLevel >= 0) {
+        selectedLevel = hoveredLevel
     }
 }
 
@@ -73,9 +102,10 @@ export const renderLevelSelect = (
             GRID_SIZE,
             GRID_SIZE,
         )
+        const isSelected = i === selectedLevel
 
         // Level box
-        ctx.fillStyle = isHovered ? "#444" : "#222"
+        ctx.fillStyle = isHovered || isSelected ? "#444" : "#222"
         ctx.fillRect(levelX, levelY, GRID_SIZE, GRID_SIZE)
 
         // Level border

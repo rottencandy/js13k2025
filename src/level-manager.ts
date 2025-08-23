@@ -4,6 +4,8 @@ import { initPlayer, updatePlayer, renderPlayer } from "./player"
 import { initState } from "./state"
 import { camera } from "./camera"
 import { WIDTH, HEIGHT, CELL_SIZE } from "./const"
+import { renderWinAnimation } from "./win-animation"
+import { updateParticles, renderParticles } from "./particle-system"
 
 let currentLevel = 0
 let currentLevelData = levelsData[0]
@@ -40,9 +42,12 @@ export const loadLevel = (levelIndex: number) => {
 
 export const updateLevel = (deltaTime: number) => {
     updatePlayer(deltaTime)
+    updateParticles(deltaTime)
 }
 
 export const renderLevel = (ctx: CanvasRenderingContext2D) => {
     renderLevelGrid(ctx)
     renderPlayer(ctx)
+    renderParticles(ctx)
+    renderWinAnimation(ctx)
 }

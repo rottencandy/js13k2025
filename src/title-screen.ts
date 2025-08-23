@@ -18,5 +18,5 @@ export const renderTitleScreen = (
     ctx.fillStyle = "#fff"
     ctx.font = "48px Arial"
     ctx.textAlign = "center"
-    ctx.fillText("UNTITLED GAME", width / 2, height / 2)
+    ctx.fillText("UNTITLED", width / 2, height / 2)
 }
