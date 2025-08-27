@@ -190,3 +190,24 @@ export const mat3Multiply = (out: Mat3, a: Mat3, b: Mat3) => {
     out[7] = b20 * a01 + b21 * a11 + b22 * a21
     out[8] = b20 * a02 + b21 * a12 + b22 * a22
 }
+
+// interpolation functions
+
+export const LINEAR = (t: number) => t
+export const EASEOUTQUAD = (t: number) => t * (2 - t)
+export const EASEOUTQUINT = (t: number) => 1 + --t * t * t * t * t
+export const EASEINQUINT = (t: number) => t * t * t * t * t
+export const EASEINOUTCUBIC = (t: number) =>
+    t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1
+export const THERENBACK = (t: number) => (t < 0.5 ? 2 * t : 2 * (1 - t))
+// elastic bounce effect at the beginning
+export const EASEINELASTIC = (t: number) =>
+    (0.04 - 0.04 / t) * Math.sin(25 * t) + 1
+// elastic bounce effect at the end
+export const EASEOUTELASTIC = (t: number) =>
+    ((0.04 * t) / --t) * Math.sin(25 * t)
+// elastic bounce effect at the beginning and end
+export const EASEINOUTELASTIC = (t: number) =>
+    (t -= 0.5) < 0
+        ? (0.02 + 0.01 / t) * Math.sin(50 * t)
+        : (0.02 - 0.01 / t) * Math.sin(50 * t) + 1

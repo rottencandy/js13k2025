@@ -36,7 +36,7 @@ export const renderWinAnimation = (ctx: CanvasRenderingContext2D) => {
         const centerX = canvas.width / 2
         const centerY = canvas.height / 2
 
-        ctx.fillText("Level Complete!", centerX, centerY)
+        ctx.fillText("COMPLETE!", centerX, centerY)
         ctx.restore()
     }
 }

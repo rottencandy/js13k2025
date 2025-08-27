@@ -1,18 +1,19 @@
 export const EMPTY = 0
 export const STATIC = 1
-export const PLAYER = 2
-export const WIN = 3
-export const LOSE = 4
-export const COLLECTIBLE = 5
+export const WIN = 2
+export const LOSE = 3
+export const COLLECTIBLE = 4
+export const PLAYER_HEAD = 5
+export const PLAYER_BODY = 6
 
 export const levelsData: number[][][] = [
     [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0],
-        [0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 3, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0],
+        [0, 6, 5, 0, 4, 0, 0, 0, 0, 0, 2, 0],
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ],

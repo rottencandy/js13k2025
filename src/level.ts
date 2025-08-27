@@ -43,7 +43,9 @@ export const renderLevel = (ctx: CanvasRenderingContext2D) => {
     for (const item of renderables) {
         ctx.fillStyle =
             item.type === WIN
-                ? allCollectiblesCollected() ? "gold" : "gray"
+                ? allCollectiblesCollected()
+                    ? "gold"
+                    : "gray"
                 : item.type === LOSE
                   ? "darkred"
                   : item.type === COLLECTIBLE
@@ -111,4 +113,20 @@ export const collectItem = (x: number, y: number) => {
 
 export const allCollectiblesCollected = (): boolean => {
     return collectibles.length === 0
+}
+
+export const getCollectibles = () => {
+    return collectibles
+}
+
+export const getRenderables = () => {
+    return renderables
+}
+
+export const restoreGameState = (
+    newCollectibles: { x: number; y: number }[],
+    newRenderables: { x: number; y: number; type: number }[],
+) => {
+    collectibles = [...newCollectibles]
+    renderables = [...newRenderables]
 }

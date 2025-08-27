@@ -28,7 +28,7 @@ loop(
     },
     // render step
     () => {
-        ctx.fillStyle = "#1a1a1a"
+        ctx.fillStyle = "#4c4c4c"
         ctx.fillRect(0, 0, WIDTH, HEIGHT)
 
         renderScene(ctx, WIDTH, HEIGHT)

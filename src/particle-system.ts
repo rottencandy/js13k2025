@@ -88,6 +88,7 @@ export const renderParticles = (ctx: CanvasRenderingContext2D) => {
             0,
             Math.PI * 2,
         )
+        ctx.closePath()
         ctx.fill()
     }
 
