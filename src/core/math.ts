@@ -195,11 +195,11 @@ export const mat3Multiply = (out: Mat3, a: Mat3, b: Mat3) => {
 
 export const LINEAR = (t: number) => t
 export const EASEOUTQUAD = (t: number) => t * (2 - t)
+export const THERENBACK = (t: number) => 1 - Math.abs(t * 2 - 1)
 export const EASEOUTQUINT = (t: number) => 1 + --t * t * t * t * t
 export const EASEINQUINT = (t: number) => t * t * t * t * t
 export const EASEINOUTCUBIC = (t: number) =>
     t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1
-export const THERENBACK = (t: number) => (t < 0.5 ? 2 * t : 2 * (1 - t))
 // elastic bounce effect at the beginning
 export const EASEINELASTIC = (t: number) =>
     (0.04 - 0.04 / t) * Math.sin(25 * t) + 1

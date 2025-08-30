@@ -1,12 +1,22 @@
 import { CELL_SIZE } from "./const"
-import { camera } from "./camera"
+import { cam } from "./camera"
 import { rand } from "./core/math"
 
 const MAX_PARTICLES = 100
 const PARTICLE_LIFE = 600
 
-// ECS style particle system
-const particles = {
+export interface ParticleSystem {
+    x: Float32Array
+    y: Float32Array
+    vx: Float32Array
+    vy: Float32Array
+    life: Float32Array
+    maxLife: Float32Array
+    alive: boolean[]
+    particleCount: number
+}
+
+export const createParticleSystem = (): ParticleSystem => ({
     x: new Float32Array(MAX_PARTICLES),
     y: new Float32Array(MAX_PARTICLES),
     vx: new Float32Array(MAX_PARTICLES),
@@ -14,13 +24,12 @@ const particles = {
     life: new Float32Array(MAX_PARTICLES),
     maxLife: new Float32Array(MAX_PARTICLES),
     alive: new Array(MAX_PARTICLES).fill(false),
-}
+    particleCount: 0,
+})
 
-let particleCount = 0
-
-const getDeadParticleIndex = (): number => {
+const getDeadParticleIndex = (system: ParticleSystem): number => {
     for (let i = 0; i < MAX_PARTICLES; i++) {
-        if (!particles.alive[i]) {
+        if (!system.alive[i]) {
             return i
         }
     }
@@ -28,62 +37,64 @@ const getDeadParticleIndex = (): number => {
 }
 
 export const emitParticles = (
+    system: ParticleSystem,
     worldX: number,
     worldY: number,
-    count: number = 32,
+    count: number = 4,
 ) => {
     const centerX = worldX * CELL_SIZE + CELL_SIZE / 2
     const centerY = worldY * CELL_SIZE + CELL_SIZE / 2
 
     for (let i = 0; i < count; i++) {
-        const index = getDeadParticleIndex()
+        const index = getDeadParticleIndex(system)
         if (index === -1) continue // No available particles
 
-        const angle = (i / count) * Math.PI * 2
-        const speed = rand(0.1, 0.5)
+        const angle = Math.random() * Math.PI * 2
+        const speed = rand(0.05, 0.1)
 
-        particles.x[index] = centerX
-        particles.y[index] = centerY
-        particles.vx[index] = Math.cos(angle) * speed
-        particles.vy[index] = Math.sin(angle) * speed
-        particles.life[index] = PARTICLE_LIFE
-        particles.maxLife[index] = PARTICLE_LIFE
-        particles.alive[index] = true
+        system.x[index] = centerX
+        system.y[index] = centerY
+        system.vx[index] = Math.cos(angle) * speed
+        system.vy[index] = Math.sin(angle) * speed
+        system.life[index] = PARTICLE_LIFE
+        system.maxLife[index] = PARTICLE_LIFE
+        system.alive[index] = true
 
-        if (index >= particleCount) {
-            particleCount = index + 1
+        if (index >= system.particleCount) {
+            system.particleCount = index + 1
         }
     }
 }
 
-export const updateParticles = (deltaTime: number) => {
-    for (let i = 0; i < particleCount; i++) {
-        if (!particles.alive[i]) continue
+export const updateParticles = (system: ParticleSystem, deltaTime: number) => {
+    for (let i = 0; i < system.particleCount; i++) {
+        if (!system.alive[i]) continue
 
-        particles.x[i] += particles.vx[i] * deltaTime
-        particles.y[i] += particles.vy[i] * deltaTime
-        particles.life[i] -= deltaTime
+        system.x[i] += system.vx[i] * deltaTime
+        system.y[i] += system.vy[i] * deltaTime
+        system.life[i] -= deltaTime
 
-        if (particles.life[i] <= 0) {
-            particles.alive[i] = false
+        if (system.life[i] <= 0) {
+            system.alive[i] = false
         }
     }
 }
 
-export const renderParticles = (ctx: CanvasRenderingContext2D) => {
-    ctx.fillStyle = "black"
+export const renderParticles = (
+    system: ParticleSystem,
+    ctx: CanvasRenderingContext2D,
+) => {
+    for (let i = 0; i < system.particleCount; i++) {
+        if (!system.alive[i]) continue
 
-    for (let i = 0; i < particleCount; i++) {
-        if (!particles.alive[i]) continue
-
-        const alpha = particles.life[i] / particles.maxLife[i]
-        const radius = 2 + (1 - alpha) * 3
+        const alpha = system.life[i] / system.maxLife[i]
+        const radius = 30 + (1 - alpha) * 20
 
         ctx.globalAlpha = alpha
         ctx.beginPath()
         ctx.arc(
-            particles.x[i] - camera.x,
-            particles.y[i] - camera.y,
+            system.x[i] - cam.x,
+            system.y[i] - cam.y,
             radius,
             0,
             Math.PI * 2,
@@ -91,6 +102,5 @@ export const renderParticles = (ctx: CanvasRenderingContext2D) => {
         ctx.closePath()
         ctx.fill()
     }
-
     ctx.globalAlpha = 1
 }

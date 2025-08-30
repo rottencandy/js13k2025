@@ -1,4 +1,4 @@
-import { camera } from "./camera"
+import { cam } from "./camera"
 import { CELL_SIZE } from "./const"
 import { STATIC, WIN, LOSE, COLLECTIBLE } from "./data/level-data"
 
@@ -51,7 +51,7 @@ export const renderLevel = (ctx: CanvasRenderingContext2D) => {
                   : item.type === COLLECTIBLE
                     ? "yellow"
                     : "red"
-        ctx.fillRect(item.x - camera.x, item.y - camera.y, CELL_SIZE, CELL_SIZE)
+        ctx.fillRect(item.x - cam.x, item.y - cam.y, CELL_SIZE, CELL_SIZE)
     }
 }
 

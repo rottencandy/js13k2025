@@ -11,30 +11,43 @@ import {
     getRenderables,
     restoreGameState,
 } from "./level"
-import { camera } from "./camera"
+import { cam } from "./camera"
 import {
     startWinAnimation,
     updateWinAnimation,
     initWinAnimation,
 } from "./win-animation"
-import { emitParticles } from "./particle-system"
+import {
+    emitParticles,
+    createParticleSystem,
+    updateParticles,
+    renderParticles,
+    ParticleSystem,
+} from "./particle-system"
 import {
     createTimer,
     startTimer,
     updateTimer,
     isTimerActive,
+    resetTimer,
 } from "./core/timer"
 import { saveGameState, undoLastMove as undoLastGameMove } from "./undo-system"
-import { EASEOUTQUAD, lerp } from "./core/math"
+import { EASEOUTQUAD, THERENBACK, lerp, randInt } from "./core/math"
 
 const MOVE_SPEED = 0.005
 const FALL_SPEED = 0.008
+const GROUND_OFFSET = 20
 
 const FACE_SIZE = 60
 const FACE_ROUNDNESS = 5
+
 const EAR_HEIGHT = 10
 const EAR_WIDTH = 27
-const GROUND_OFFSET = 10
+
+const BREATH_SPEED = 3000
+
+const TAIL_SIZE = 30
+const TAIL_CURVE_AMOUNT = 10
 
 type Rect = {
     // position
@@ -47,17 +60,31 @@ type Rect = {
 
 let playerRects: Rect[] = [{ x: 0, y: 0, dx: 0, dy: 0 }]
 
+const hideTimer = createTimer(900)
+const blinkTimer = createTimer(2000)
+const tailSpeedTimer = createTimer(4000)
+
 let isMoving = false
 let isFalling = false
+let invertTail = false
 let moveProgress = 0
-
-const hideTimer = createTimer(300)
+let blinkProgress = 1
+let breathTime = 0
+let tailMoveTime = 0
+let tailMoveSpeed = tailSpeedTimer.duration
+let particles: ParticleSystem
 
 export const initPlayer = (rects: Rect[] = [{ x: 0, y: 0, dx: 0, dy: 0 }]) => {
     playerRects = rects.map((rect) => ({ ...rect, dx: 0, dy: 0 }))
     isMoving = false
     isFalling = false
     moveProgress = 0
+    blinkProgress = 1
+    breathTime = 0
+    tailMoveTime = 0
+    particles = createParticleSystem()
+    startTimer(blinkTimer)
+    startTimer(tailSpeedTimer)
     initWinAnimation()
 }
 
@@ -122,14 +149,32 @@ const handleDirectionInput = (dirX: number, dirY: number) => {
     }
 }
 
-export const updatePlayer = (deltaTime: number) => {
-    // Handle win animation timer
-    if (updateWinAnimation(deltaTime)) {
+export const updatePlayer = (dt: number) => {
+    // Don't update further when win condition is met
+    if (updateWinAnimation(dt)) {
         return
     }
 
-    // Update hide timer
-    updateTimer(hideTimer, deltaTime)
+    // Update particles
+    updateParticles(particles, dt)
+
+    // Update timers
+    breathTime += dt / BREATH_SPEED
+    tailMoveTime += dt / tailMoveSpeed
+    updateTimer(hideTimer, dt)
+    if (updateTimer(blinkTimer, dt)) {
+        resetTimer(blinkTimer, randInt(500, 7000))
+        blinkProgress = 0
+    }
+    if (blinkProgress < 1) {
+        blinkProgress += dt * 0.01
+    } else {
+        blinkProgress = 1
+    }
+    if (updateTimer(tailSpeedTimer, dt)) {
+        resetTimer(tailSpeedTimer, randInt(200, 5000))
+        tailMoveSpeed = tailSpeedTimer.duration
+    }
 
     const isAnimating = isMoving || isFalling
 
@@ -150,9 +195,7 @@ export const updatePlayer = (deltaTime: number) => {
 
     // Update movement interpolation (only in move mode when moving all rects)
     if (isAnimating) {
-        const moveAmount = isFalling
-            ? FALL_SPEED * deltaTime
-            : MOVE_SPEED * deltaTime
+        const moveAmount = isFalling ? FALL_SPEED * dt : MOVE_SPEED * dt
 
         moveProgress += moveAmount
 
@@ -160,6 +203,9 @@ export const updatePlayer = (deltaTime: number) => {
         if (moveProgress >= 1) {
             moveProgress = 0
             isMoving = false
+
+            const tail = playerRects[playerRects.length - 1]
+            invertTail = (tail.dx < 0)
 
             for (let i = 0; i < playerRects.length; i++) {
                 const rect = playerRects[i]
@@ -201,7 +247,7 @@ export const updatePlayer = (deltaTime: number) => {
                 // Emit particles for each player rect touching a lose block
                 playerRects.forEach((rect) => {
                     if (isLoseBlock(rect.x, rect.y)) {
-                        emitParticles(rect.x, rect.y)
+                        emitParticles(particles, rect.x, rect.y)
                     }
                 })
                 // Start hide timer, then undo after timer completes
@@ -213,66 +259,96 @@ export const updatePlayer = (deltaTime: number) => {
 }
 
 export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
-    // Don't render if hide timer is active
+    // Render particles
+    ctx.fillStyle = "black"
+    renderParticles(particles, ctx)
+
+    // Don't render player if hide timer is active
     if (isTimerActive(hideTimer)) {
         return
     }
 
+    const head = playerRects[0]
+    const tail = playerRects[playerRects.length - 1]
     // smooth movement if not falling
     const lerpedMove = isFalling
         ? moveProgress
         : lerp(0, 1, EASEOUTQUAD(moveProgress))
+    const bouncedMove = THERENBACK(lerpedMove) * head.dx
+    const breathAmount = THERENBACK(breathTime % 1)
+    /** groud offset */
+    const groundOff = GROUND_OFFSET + breathAmount * 2 + bouncedMove
 
     // calculate position
-    const firstRect = playerRects[0]
-    const firstRenderX =
-        (firstRect.x + firstRect.dx * lerpedMove) * CELL_SIZE - camera.x
-    const firstRenderY =
-        (firstRect.y + firstRect.dy * lerpedMove) * CELL_SIZE - camera.y
+    const firstRenderX = (head.x + head.dx * lerpedMove) * CELL_SIZE - cam.x
+    const firstRenderY = (head.y + head.dy * lerpedMove) * CELL_SIZE - cam.y
 
     // draw the body as a continuous line path
     ctx.beginPath()
-    // offset y pos by 10 to move closer to the ground
+    // offset y pos to move closer to the ground
     ctx.moveTo(
         firstRenderX + CELL_SIZE / 2,
-        firstRenderY + GROUND_OFFSET + CELL_SIZE / 2,
+        firstRenderY + groundOff + CELL_SIZE / 2,
     )
     for (let i = 1; i < playerRects.length; i++) {
         const rect = playerRects[i]
         const renderX =
-            (rect.x + rect.dx * lerpedMove) * CELL_SIZE -
-            camera.x +
-            CELL_SIZE / 2
+            (rect.x + rect.dx * lerpedMove) * CELL_SIZE - cam.x + CELL_SIZE / 2
         const renderY =
             (rect.y + rect.dy * lerpedMove) * CELL_SIZE -
-            camera.y +
-            GROUND_OFFSET +
+            cam.y +
+            groundOff +
             CELL_SIZE / 2
 
         ctx.lineTo(renderX, renderY)
     }
-    ctx.lineWidth = 60
+    ctx.lineWidth = 60 - breathAmount * 4 - bouncedMove * 2
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
     ctx.strokeStyle = "black"
     ctx.stroke()
     ctx.closePath()
 
-    const xPos = firstRenderX + CELL_SIZE / 4
-    const yPos = firstRenderY + CELL_SIZE / 4
+    // tail
+    const tailX =
+        (tail.x + tail.dx * lerpedMove) * CELL_SIZE -
+        cam.x +
+        (invertTail ? 60 : 30)
+    const tailY =
+        40 + groundOff + (tail.y + tail.dy * lerpedMove) * CELL_SIZE - cam.y
+    const tailTime = tailMoveTime % 1
+    const tailAngleX = invertTail
+        ? tailX + tailTime * TAIL_SIZE
+        : tailX - tailTime * TAIL_SIZE
+    const tailOffsetY = Math.sin(tailMoveTime * Math.PI) * TAIL_CURVE_AMOUNT
+    ctx.lineWidth = 10
+    ctx.beginPath()
+    ctx.moveTo(tailX, tailY)
+    ctx.bezierCurveTo(
+        tailAngleX,
+        tailY + tailOffsetY,
+        tailAngleX,
+        tailY - tailOffsetY,
+        invertTail ? tailX + TAIL_SIZE : tailX - TAIL_SIZE,
+        tailY,
+    )
+    ctx.stroke()
+    ctx.closePath()
 
-    // center & rotate face
+    const xPos = firstRenderX + CELL_SIZE / 4
+    const yPos = firstRenderY + GROUND_OFFSET / 2 + CELL_SIZE / 4
+
+    // rotate face in the center
     const centerX = xPos + FACE_SIZE / 2
     const centerY = yPos + FACE_SIZE / 2
     ctx.translate(centerX, centerY)
-    ctx.rotate(Math.PI * 0.05)
+    ctx.rotate(Math.PI * 0.05 * bouncedMove)
     ctx.translate(-centerX, -centerY)
     ctx.lineWidth = 10
 
     ctx.beginPath()
     ctx.roundRect(xPos, yPos, FACE_SIZE, FACE_SIZE, FACE_ROUNDNESS)
     ctx.fillStyle = "black"
-    ctx.strokeStyle = "black"
     ctx.fill()
 
     //// left ear
@@ -289,10 +365,18 @@ export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
 
     // eyes
     ctx.beginPath()
-    ctx.ellipse(xPos + 15, yPos + 20, 5, 7, 0, 0, Math.PI * 2)
-    ctx.ellipse(xPos + 45, yPos + 20, 5, 7, 0, 0, Math.PI * 2)
+    ctx.ellipse(xPos + 15, yPos + 20, 5, 7 * blinkProgress, 0, 0, Math.PI * 2)
+    ctx.ellipse(xPos + 45, yPos + 20, 5, 7 * blinkProgress, 0, 0, Math.PI * 2)
     ctx.closePath()
     ctx.fillStyle = "lightyellow"
+    ctx.fill()
+
+    // eyeballs
+    ctx.beginPath()
+    ctx.ellipse(xPos + 15 + 1, yPos + 20 + 2, 2, 4, 0, 0, Math.PI * 2)
+    ctx.ellipse(xPos + 45 + 1, yPos + 20 + 2, 2, 4, 0, 0, Math.PI * 2)
+    ctx.closePath()
+    ctx.fillStyle = "black"
     ctx.fill()
 
     // nose
@@ -306,14 +390,6 @@ export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
     ctx.lineWidth = 1
     ctx.fill()
     ctx.stroke()
-
-    // eyeballs
-    ctx.beginPath()
-    ctx.ellipse(xPos + 15 + 1, yPos + 20 + 2, 2, 4, 0, 0, Math.PI * 2)
-    ctx.ellipse(xPos + 45 + 1, yPos + 20 + 2, 2, 4, 0, 0, Math.PI * 2)
-    ctx.closePath()
-    ctx.fillStyle = "black"
-    ctx.fill()
 
     // reset transform matrix
     ctx.setTransform(1, 0, 0, 1, 0, 0)

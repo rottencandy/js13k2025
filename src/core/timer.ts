@@ -20,6 +20,9 @@ export const startTimer = (timer: Timer) => {
     timer.elapsed = 0
 }
 
+/**
+ * Returns true if timer has elapsed
+ */
 export const updateTimer = (timer: Timer, deltaTime: number): boolean => {
     if (!timer.isActive) return false
 
@@ -32,6 +35,13 @@ export const updateTimer = (timer: Timer, deltaTime: number): boolean => {
     }
 
     return false
+}
+
+export const resetTimer = (timer: Timer, duration?: number) => {
+    startTimer(timer)
+    if (duration) {
+        timer.duration = duration
+    }
 }
 
 export const isTimerActive = (timer: Timer): boolean => timer.isActive

@@ -1,4 +1,4 @@
-export const camera = {
-  x: 0,
-  y: 0
-};
+export const cam = {
+    x: 0,
+    y: 0,
+}
