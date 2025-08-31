@@ -1,10 +1,8 @@
 import { initLevel, renderLevel as renderLevelGrid } from "./level"
 import { levelsData, PLAYER_HEAD, PLAYER_BODY } from "./data/level-data"
 import { initPlayer, updatePlayer, renderPlayer } from "./player"
-import { initState } from "./state"
 import { cam } from "./camera"
 import { WIDTH, HEIGHT, CELL_SIZE } from "./const"
-import { renderWinAnimation } from "./win-animation"
 import { clearUndoStack } from "./undo-system"
 
 let currentLevel = 0
@@ -14,7 +12,6 @@ export const loadLevel = (levelIndex: number) => {
     currentLevel = levelIndex
     currentLevelData = levelsData[currentLevel]
     initLevel(currentLevelData)
-    initState()
     clearUndoStack()
 
     // Calculate level dimensions
@@ -48,5 +45,6 @@ export const updateLevel = (deltaTime: number) => {
 export const renderLevel = (ctx: CanvasRenderingContext2D) => {
     renderLevelGrid(ctx)
     renderPlayer(ctx)
-    renderWinAnimation(ctx)
 }
+
+export const getCurrentLevel = () => currentLevel

@@ -14,9 +14,10 @@ export interface ParticleSystem {
     maxLife: Float32Array
     alive: boolean[]
     particleCount: number
+    particleSize: number
 }
 
-export const createParticleSystem = (): ParticleSystem => ({
+export const createParticleSystem = (particleSize = 30): ParticleSystem => ({
     x: new Float32Array(MAX_PARTICLES),
     y: new Float32Array(MAX_PARTICLES),
     vx: new Float32Array(MAX_PARTICLES),
@@ -25,6 +26,7 @@ export const createParticleSystem = (): ParticleSystem => ({
     maxLife: new Float32Array(MAX_PARTICLES),
     alive: new Array(MAX_PARTICLES).fill(false),
     particleCount: 0,
+    particleSize,
 })
 
 const getDeadParticleIndex = (system: ParticleSystem): number => {
@@ -47,7 +49,7 @@ export const emitParticles = (
 
     for (let i = 0; i < count; i++) {
         const index = getDeadParticleIndex(system)
-        if (index === -1) continue // No available particles
+        if (index === -1) break // No available particles
 
         const angle = Math.random() * Math.PI * 2
         const speed = rand(0.05, 0.1)
@@ -88,7 +90,7 @@ export const renderParticles = (
         if (!system.alive[i]) continue
 
         const alpha = system.life[i] / system.maxLife[i]
-        const radius = 30 + (1 - alpha) * 20
+        const radius = system.particleSize + (1 - alpha) * 20
 
         ctx.globalAlpha = alpha
         ctx.beginPath()

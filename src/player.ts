@@ -1,4 +1,4 @@
-import { CELL_SIZE } from "./const"
+import { CELL_SIZE, DDGREEN, HEIGHT, WIDTH } from "./const"
 import { keys } from "./core/input"
 import {
     isCollision,
@@ -13,10 +13,9 @@ import {
 } from "./level"
 import { cam } from "./camera"
 import {
-    startWinAnimation,
-    updateWinAnimation,
-    initWinAnimation,
-} from "./win-animation"
+    startTransitionAnimation,
+    isTransitioning,
+} from "./transition-animation"
 import {
     emitParticles,
     createParticleSystem,
@@ -33,6 +32,9 @@ import {
 } from "./core/timer"
 import { saveGameState, undoLastMove as undoLastGameMove } from "./undo-system"
 import { EASEOUTQUAD, THERENBACK, lerp, randInt } from "./core/math"
+import { Scene, setScene } from "./scene-manager"
+import { markLevelCompleted } from "./core/localstorage"
+import { getCurrentLevel } from "./level-manager"
 
 const MOVE_SPEED = 0.005
 const FALL_SPEED = 0.008
@@ -85,7 +87,7 @@ export const initPlayer = (rects: Rect[] = [{ x: 0, y: 0, dx: 0, dy: 0 }]) => {
     particles = createParticleSystem()
     startTimer(blinkTimer)
     startTimer(tailSpeedTimer)
-    initWinAnimation()
+    startTransitionAnimation(WIDTH / 2, HEIGHT / 2, true, DDGREEN)
 }
 
 const playerAtPos = (x: number, y: number) => {
@@ -150,8 +152,8 @@ const handleDirectionInput = (dirX: number, dirY: number) => {
 }
 
 export const updatePlayer = (dt: number) => {
-    // Don't update further when win condition is met
-    if (updateWinAnimation(dt)) {
+    // Don't update further when scene is transitioning
+    if (isTransitioning()) {
         return
     }
 
@@ -205,7 +207,7 @@ export const updatePlayer = (dt: number) => {
             isMoving = false
 
             const tail = playerRects[playerRects.length - 1]
-            invertTail = (tail.dx < 0)
+            invertTail = tail.dx < 0
 
             for (let i = 0; i < playerRects.length; i++) {
                 const rect = playerRects[i]
@@ -239,7 +241,17 @@ export const updatePlayer = (dt: number) => {
 
             // Check win condition after movement completes
             if (checkWinCondition()) {
-                startWinAnimation()
+                markLevelCompleted(getCurrentLevel())
+                const head = playerRects[0]
+                startTransitionAnimation(
+                    head.x * CELL_SIZE - cam.x + CELL_SIZE / 2,
+                    head.y * CELL_SIZE - cam.y + CELL_SIZE / 2,
+                    false,
+                    DDGREEN,
+                    () => {
+                        setScene(Scene.LevelSelect)
+                    },
+                )
             }
 
             // Check lose condition after movement completes
