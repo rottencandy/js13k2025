@@ -80,7 +80,7 @@ export const updateLevelSelect = () => {
     }
 
     // Handle level selection with space or enter
-    if (keys.btnp.spc && isLevelAvailable(selectedLevel)) {
+    if (keys.btnp.sel && isLevelAvailable(selectedLevel)) {
         startLevel(selectedLevel)
     }
 

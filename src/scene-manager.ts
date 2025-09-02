@@ -16,9 +16,7 @@ export const enum Scene {
     Game,
 }
 
-let currentScene: Scene = Scene.Title
-
-export const getCurrentScene = () => currentScene
+export let currentScene: Scene = Scene.Title
 
 export const setScene = (scene: Scene) => {
     currentScene = scene
@@ -37,7 +35,7 @@ export const updateScene = (dt: number) => {
     updateTransitionAnimation(dt)
     switch (currentScene) {
         case Scene.Title:
-            updateTitleScreen(dt)
+            updateTitleScreen()
             break
         case Scene.LevelSelect:
             updateLevelSelect()

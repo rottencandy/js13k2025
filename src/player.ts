@@ -190,7 +190,7 @@ export const updatePlayer = (dt: number) => {
             handleDirectionInput(-1, 0)
         } else if (keys.btnp.rt) {
             handleDirectionInput(+1, 0)
-        } else if (keys.btnp.z) {
+        } else if (keys.btnp.undo) {
             undoLastMove()
         }
     }

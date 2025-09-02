@@ -1,21 +1,22 @@
+import { touchButtons, updateTouchControls } from "src/touch-controls"
+
 export const keys = {
+    hasTouch: false,
     ptr: { x: 0, y: 0 },
     ptrDown: { x: 0, y: 0 },
     btn: {
-        spc: false,
-        esc: false,
+        sel: false,
         clk: false,
-        z: false,
+        undo: false,
     },
     btnp: {
         up: false,
         lf: false,
         dn: false,
         rt: false,
-        spc: false,
+        sel: false,
         clk: false,
-        esc: false,
-        z: false,
+        undo: false,
     },
 }
 
@@ -28,7 +29,7 @@ export const initInput = (
     height: number,
 ) => {
     let gamepad: Gamepad | undefined = undefined
-    const hasTouch = "ontouchstart" in window
+    keys.hasTouch = "ontouchstart" in window
     const dirPressed = {
         up: false,
         lf: false,
@@ -40,10 +41,9 @@ export const initInput = (
         lf: false,
         dn: false,
         rt: false,
-        spc: false,
+        sel: false,
         clk: false,
-        esc: false,
-        z: false,
+        undo: false,
     }
 
     const setKeyState =
@@ -67,13 +67,11 @@ export const initInput = (
                     dirPressed.rt = pressed
                     break
                 case "KeyZ":
-                    keys.btn.z = pressed
-                    break
-                case "Escape":
-                    keys.btn.esc = pressed
+                    keys.btn.undo = pressed
                     break
                 case "Space":
-                    keys.btn.spc = pressed
+                case "Enter":
+                    keys.btn.sel = pressed
                     break
             }
         }
@@ -83,10 +81,7 @@ export const initInput = (
 
     // not using `window` breaks chrome
     window.ongamepadconnected = (e) => {
-        // only consider gamepads with analog sticks
-        if (e.gamepad.axes.length > 1 && e.gamepad.buttons.length > 0) {
-            gamepad = e.gamepad
-        }
+        gamepad = e.gamepad
     }
     window.ongamepaddisconnected = () => {
         gamepad = undefined
@@ -106,7 +101,7 @@ export const initInput = (
         keys.ptr.y = e.offsetY / ratio
     }
 
-    if (hasTouch) {
+    if (keys.hasTouch) {
         canvas.ontouchstart =
             canvas.ontouchmove =
             canvas.ontouchend =
@@ -116,7 +111,10 @@ export const initInput = (
                     if (keys.btn.clk) {
                         const offset = canvas.getBoundingClientRect()
                         const touch = e.touches[0]
-                        const ratio = Math.min(innerWidth / width, innerHeight / height)
+                        const ratio = Math.min(
+                            innerWidth / width,
+                            innerHeight / height,
+                        )
                         keys.ptr.x = (touch.clientX - offset.left) / ratio
                         keys.ptr.y = (touch.clientY - offset.top) / ratio
                     }
@@ -124,23 +122,14 @@ export const initInput = (
     }
 
     return () => {
-        keys.btnp.up = dirPressed.up && !lastFrame.up
-        keys.btnp.dn = dirPressed.dn && !lastFrame.dn
-        keys.btnp.lf = dirPressed.lf && !lastFrame.lf
-        keys.btnp.rt = dirPressed.rt && !lastFrame.rt
-        keys.btnp.clk = keys.btn.clk && !lastFrame.clk
-        keys.btnp.esc = keys.btn.esc && !lastFrame.esc
-        keys.btnp.spc = keys.btn.spc && !lastFrame.spc
-        keys.btnp.z = keys.btn.z && !lastFrame.z
-
-        lastFrame.up = dirPressed.up
-        lastFrame.dn = dirPressed.dn
-        lastFrame.lf = dirPressed.lf
-        lastFrame.rt = dirPressed.rt
-        lastFrame.clk = keys.btn.clk
-        lastFrame.esc = keys.btn.esc
-        lastFrame.spc = keys.btn.spc
-        lastFrame.z = keys.btn.z
+        if (keys.hasTouch) {
+            updateTouchControls()
+            dirPressed.up = touchButtons[0].pressed
+            dirPressed.dn = touchButtons[1].pressed
+            dirPressed.lf = touchButtons[2].pressed
+            dirPressed.rt = touchButtons[3].pressed
+            keys.btn.undo = touchButtons[4].pressed
+        }
 
         if (keys.btn.clk) {
             keys.ptrDown = {
@@ -148,5 +137,31 @@ export const initInput = (
                 y: keys.ptr.y,
             }
         }
+
+        if (gamepad) {
+            // standard layout https://w3c.github.io/gamepad/#remapping
+            keys.btn.sel = gamepad.buttons[0]?.pressed
+            keys.btn.undo = gamepad.buttons[1]?.pressed
+            dirPressed.up = gamepad.buttons[12]?.pressed
+            dirPressed.dn = gamepad.buttons[13]?.pressed
+            dirPressed.lf = gamepad.buttons[14]?.pressed
+            dirPressed.rt = gamepad.buttons[15]?.pressed
+        }
+
+        keys.btnp.up = dirPressed.up && !lastFrame.up
+        keys.btnp.dn = dirPressed.dn && !lastFrame.dn
+        keys.btnp.lf = dirPressed.lf && !lastFrame.lf
+        keys.btnp.rt = dirPressed.rt && !lastFrame.rt
+        keys.btnp.clk = keys.btn.clk && !lastFrame.clk
+        keys.btnp.sel = keys.btn.sel && !lastFrame.sel
+        keys.btnp.undo = keys.btn.undo && !lastFrame.undo
+
+        lastFrame.up = dirPressed.up
+        lastFrame.dn = dirPressed.dn
+        lastFrame.lf = dirPressed.lf
+        lastFrame.rt = dirPressed.rt
+        lastFrame.clk = keys.btn.clk
+        lastFrame.sel = keys.btn.sel
+        lastFrame.undo = keys.btn.undo
     }
 }

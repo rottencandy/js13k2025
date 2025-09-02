@@ -11,7 +11,7 @@ export const updateTitleScreen = () => {
     scrollOffset.x += 0.5
     scrollOffset.y += 0.3
 
-    if (keys.btnp.spc || keys.btn.clk) {
+    if (keys.btnp.sel || keys.btn.clk) {
         startTransitionAnimation(WIDTH / 2, HEIGHT / 2, false, DDBLUE, () => {
             setScene(Scene.LevelSelect)
         })

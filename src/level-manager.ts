@@ -4,6 +4,7 @@ import { initPlayer, updatePlayer, renderPlayer } from "./player"
 import { cam } from "./camera"
 import { WIDTH, HEIGHT, CELL_SIZE } from "./const"
 import { clearUndoStack } from "./undo-system"
+import { renderTouchControls } from "./touch-controls"
 
 let currentLevel = 0
 let currentLevelData = levelsData[0]
@@ -45,6 +46,7 @@ export const updateLevel = (deltaTime: number) => {
 export const renderLevel = (ctx: CanvasRenderingContext2D) => {
     renderLevelGrid(ctx)
     renderPlayer(ctx)
+    renderTouchControls(ctx)
 }
 
 export const getCurrentLevel = () => currentLevel
