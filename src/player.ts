@@ -1,4 +1,4 @@
-import { CELL_SIZE, DDGREEN, HEIGHT, WIDTH } from "./const"
+import { BLACK, CELL_SIZE, DDBLUE, HEIGHT, WHITE, WIDTH } from "./const"
 import { keys } from "./core/input"
 import {
     isCollision,
@@ -68,26 +68,31 @@ const tailSpeedTimer = createTimer(4000)
 
 let isMoving = false
 let isFalling = false
+let isBlocked = false
 let invertTail = false
 let moveProgress = 0
+let blockedProgress = 0
 let blinkProgress = 1
 let breathTime = 0
 let tailMoveTime = 0
 let tailMoveSpeed = tailSpeedTimer.duration
 let particles: ParticleSystem
+let blockedDirection = { x: 0, y: 0 }
 
 export const initPlayer = (rects: Rect[] = [{ x: 0, y: 0, dx: 0, dy: 0 }]) => {
     playerRects = rects.map((rect) => ({ ...rect, dx: 0, dy: 0 }))
     isMoving = false
     isFalling = false
+    isBlocked = false
     moveProgress = 0
+    blockedProgress = 0
     blinkProgress = 1
     breathTime = 0
     tailMoveTime = 0
     particles = createParticleSystem()
     startTimer(blinkTimer)
     startTimer(tailSpeedTimer)
-    startTransitionAnimation(WIDTH / 2, HEIGHT / 2, true, DDGREEN)
+    startTransitionAnimation(WIDTH / 2, HEIGHT / 2, true, DDBLUE)
 }
 
 const playerAtPos = (x: number, y: number) => {
@@ -116,13 +121,11 @@ const undoLastMove = () => {
 
 const handleExpand = (dirX: number, dirY: number) => {
     const head = playerRects[0]
-    savePlayerState()
     playerRects.unshift({ x: head.x, y: head.y, dx: dirX, dy: dirY })
     isMoving = true
 }
 
 const handleMove = (dirX: number, dirY: number) => {
-    savePlayerState()
     isMoving = true
     moveProgress = 0
     // store directions for all rects
@@ -142,12 +145,19 @@ const handleDirectionInput = (dirX: number, dirY: number) => {
     const newRectY = head.y + dirY
     // only allow if there is nothing colliding at target position
     if (!isCollision(newRectX, newRectY) && !playerAtPos(newRectX, newRectY)) {
+        savePlayerState()
         if (isCollectible(newRectX, newRectY)) {
             collectItem(newRectX, newRectY)
+            emitParticles(particles, newRectX, newRectY)
             handleExpand(dirX, dirY)
         } else {
             handleMove(dirX, dirY)
         }
+    } else {
+        // show blocked animation when player cannot move
+        isBlocked = true
+        blockedProgress = 0
+        blockedDirection = { x: dirX, y: dirY }
     }
 }
 
@@ -178,9 +188,18 @@ export const updatePlayer = (dt: number) => {
         tailMoveSpeed = tailSpeedTimer.duration
     }
 
+    // Update blocked animation
+    if (isBlocked) {
+        blockedProgress += dt * 0.01
+        if (blockedProgress >= 1) {
+            isBlocked = false
+            blockedProgress = 0
+        }
+    }
+
     const isAnimating = isMoving || isFalling
 
-    // Only allow movement if not currently moving or falling
+    // Only allow movement if not currently moving, falling, or blocked
     if (!isAnimating) {
         if (keys.btnp.up) {
             handleDirectionInput(0, -1)
@@ -247,7 +266,7 @@ export const updatePlayer = (dt: number) => {
                     head.x * CELL_SIZE - cam.x + CELL_SIZE / 2,
                     head.y * CELL_SIZE - cam.y + CELL_SIZE / 2,
                     false,
-                    DDGREEN,
+                    DDBLUE,
                     () => {
                         setScene(Scene.LevelSelect)
                     },
@@ -288,12 +307,20 @@ export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
         : lerp(0, 1, EASEOUTQUAD(moveProgress))
     const bouncedMove = THERENBACK(lerpedMove) * head.dx
     const breathAmount = THERENBACK(breathTime % 1)
+
+    // blocked animation offset
+    const blockedOffset = isBlocked ? THERENBACK(blockedProgress) * 10 : 0
+    const blockedX = blockedOffset * blockedDirection.x
+    const blockedY = blockedOffset * blockedDirection.y
+
     /** groud offset */
     const groundOff = GROUND_OFFSET + breathAmount * 2 + bouncedMove
 
     // calculate position
-    const firstRenderX = (head.x + head.dx * lerpedMove) * CELL_SIZE - cam.x
-    const firstRenderY = (head.y + head.dy * lerpedMove) * CELL_SIZE - cam.y
+    const firstRenderX =
+        (head.x + head.dx * lerpedMove) * CELL_SIZE - cam.x + blockedX
+    const firstRenderY =
+        (head.y + head.dy * lerpedMove) * CELL_SIZE - cam.y + blockedY
 
     // draw the body as a continuous line path
     ctx.beginPath()
@@ -305,19 +332,23 @@ export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
     for (let i = 1; i < playerRects.length; i++) {
         const rect = playerRects[i]
         const renderX =
-            (rect.x + rect.dx * lerpedMove) * CELL_SIZE - cam.x + CELL_SIZE / 2
+            (rect.x + rect.dx * lerpedMove) * CELL_SIZE -
+            cam.x +
+            CELL_SIZE / 2 +
+            blockedX
         const renderY =
             (rect.y + rect.dy * lerpedMove) * CELL_SIZE -
             cam.y +
             groundOff +
-            CELL_SIZE / 2
+            CELL_SIZE / 2 +
+            blockedY
 
         ctx.lineTo(renderX, renderY)
     }
     ctx.lineWidth = 60 - breathAmount * 4 - bouncedMove * 2
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
-    ctx.strokeStyle = "black"
+    ctx.strokeStyle = BLACK
     ctx.stroke()
     ctx.closePath()
 
@@ -325,9 +356,14 @@ export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
     const tailX =
         (tail.x + tail.dx * lerpedMove) * CELL_SIZE -
         cam.x +
-        (invertTail ? 60 : 30)
+        (invertTail ? 60 : 30) +
+        blockedX
     const tailY =
-        40 + groundOff + (tail.y + tail.dy * lerpedMove) * CELL_SIZE - cam.y
+        40 +
+        groundOff +
+        (tail.y + tail.dy * lerpedMove) * CELL_SIZE -
+        cam.y +
+        blockedY
     const tailTime = tailMoveTime % 1
     const tailAngleX = invertTail
         ? tailX + tailTime * TAIL_SIZE
@@ -397,8 +433,8 @@ export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
     ctx.moveTo(xPos + 30, yPos + 30)
     ctx.lineTo(xPos + 30, yPos + 40)
     ctx.closePath()
-    ctx.fillStyle = "white"
-    ctx.strokeStyle = "white"
+    ctx.fillStyle = WHITE
+    ctx.strokeStyle = WHITE
     ctx.lineWidth = 1
     ctx.fill()
     ctx.stroke()

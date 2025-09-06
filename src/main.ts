@@ -1,4 +1,4 @@
-import { HEIGHT, WIDTH } from "./const"
+import { BLACK, HEIGHT, WIDTH } from "./const"
 import { resize } from "./core/canvas"
 import { loop } from "./core/loop"
 import { initInput } from "./core/input"
@@ -28,7 +28,7 @@ loop(
     },
     // render step
     () => {
-        ctx.fillStyle = "#4c4c4c"
+        ctx.fillStyle = BLACK
         ctx.fillRect(0, 0, WIDTH, HEIGHT)
 
         renderScene(ctx, WIDTH, HEIGHT)

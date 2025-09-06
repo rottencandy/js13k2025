@@ -1,18 +1,30 @@
-import { initLevel, renderLevel as renderLevelGrid } from "./level"
+import {
+    initLevel,
+    renderLevel as renderLevelGrid,
+    updateLevel as updateLevelGrid,
+} from "./level"
 import { levelsData, PLAYER_HEAD, PLAYER_BODY } from "./data/level-data"
 import { initPlayer, updatePlayer, renderPlayer } from "./player"
 import { cam } from "./camera"
 import { WIDTH, HEIGHT, CELL_SIZE } from "./const"
 import { clearUndoStack } from "./undo-system"
 import { renderTouchControls } from "./touch-controls"
+import {
+    initBackground,
+    renderBackground,
+    updateBackground,
+} from "./background"
 
 let currentLevel = 0
 let currentLevelData = levelsData[0]
+let elapsedTime = 0
 
 export const loadLevel = (levelIndex: number) => {
     currentLevel = levelIndex
     currentLevelData = levelsData[currentLevel]
+    elapsedTime = 0
     initLevel(currentLevelData)
+    initBackground()
     clearUndoStack()
 
     // Calculate level dimensions
@@ -40,10 +52,14 @@ export const loadLevel = (levelIndex: number) => {
 }
 
 export const updateLevel = (deltaTime: number) => {
+    elapsedTime += deltaTime / 1000
+    updateBackground(deltaTime / 1000)
+    updateLevelGrid(deltaTime)
     updatePlayer(deltaTime)
 }
 
 export const renderLevel = (ctx: CanvasRenderingContext2D) => {
+    renderBackground(ctx, elapsedTime)
     renderLevelGrid(ctx)
     renderPlayer(ctx)
     renderTouchControls(ctx)

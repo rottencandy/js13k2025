@@ -2,7 +2,6 @@ import { CELL_SIZE } from "./const"
 import { cam } from "./camera"
 import { rand } from "./core/math"
 
-const MAX_PARTICLES = 100
 const PARTICLE_LIFE = 600
 
 export interface ParticleSystem {
@@ -13,24 +12,29 @@ export interface ParticleSystem {
     life: Float32Array
     maxLife: Float32Array
     alive: boolean[]
+    maxParticles: number
     particleCount: number
     particleSize: number
 }
 
-export const createParticleSystem = (particleSize = 30): ParticleSystem => ({
-    x: new Float32Array(MAX_PARTICLES),
-    y: new Float32Array(MAX_PARTICLES),
-    vx: new Float32Array(MAX_PARTICLES),
-    vy: new Float32Array(MAX_PARTICLES),
-    life: new Float32Array(MAX_PARTICLES),
-    maxLife: new Float32Array(MAX_PARTICLES),
-    alive: new Array(MAX_PARTICLES).fill(false),
+export const createParticleSystem = (
+    particleSize = 30,
+    maxParticles = 100,
+): ParticleSystem => ({
+    x: new Float32Array(maxParticles),
+    y: new Float32Array(maxParticles),
+    vx: new Float32Array(maxParticles),
+    vy: new Float32Array(maxParticles),
+    life: new Float32Array(maxParticles),
+    maxLife: new Float32Array(maxParticles),
+    alive: new Array(maxParticles).fill(false),
+    maxParticles,
     particleCount: 0,
     particleSize,
 })
 
 const getDeadParticleIndex = (system: ParticleSystem): number => {
-    for (let i = 0; i < MAX_PARTICLES; i++) {
+    for (let i = 0; i < system.maxParticles; i++) {
         if (!system.alive[i]) {
             return i
         }

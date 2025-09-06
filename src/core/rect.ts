@@ -6,6 +6,7 @@ import {
 } from "./gl-constants"
 import { createShaderProgram } from "./webgl"
 import { cam } from "../camera"
+import { RED } from "src/const"
 
 let shaderProgram: WebGLProgram
 let vao: WebGLVertexArrayObject
@@ -89,7 +90,7 @@ export const drawRect = (
     width: number,
     height: number,
 ) => {
-    ctx.fillStyle = "red"
+    ctx.fillStyle = RED
     ctx.fillRect(x - cam.x, y - cam.y, width, height)
 }
 
