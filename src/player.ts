@@ -4,10 +4,13 @@ import {
     isCollision,
     isWinBlock,
     isLoseBlock,
-    isCollectible,
-    collectItem,
-    allCollectiblesCollected,
-    getCollectibles,
+    isGrowItem,
+    isShrinkItem,
+    collectGrowItem,
+    collectShrinkItem,
+    allGrowItemsCollected,
+    getGrowItems,
+    getShrinkItems,
     getRenderables,
     restoreGameState,
 } from "./level"
@@ -104,7 +107,12 @@ const savePlayerState = () => {
         x: rect.x,
         y: rect.y,
     }))
-    saveGameState(playerState, getCollectibles(), getRenderables())
+    saveGameState(
+        playerState,
+        getRenderables(),
+        getGrowItems(),
+        getShrinkItems(),
+    )
 }
 
 const undoLastMove = () => {
@@ -115,7 +123,7 @@ const undoLastMove = () => {
             dx: 0,
             dy: 0,
         }))
-        restoreGameState(state.collectibles, state.renderables)
+        restoreGameState(state.growItems, state.renderables, state.shrinkItems)
     }
 }
 
@@ -123,6 +131,29 @@ const handleExpand = (dirX: number, dirY: number) => {
     const head = playerRects[0]
     playerRects.unshift({ x: head.x, y: head.y, dx: dirX, dy: dirY })
     isMoving = true
+}
+
+const handleLoseCondition = () => {
+    // Emit particles for each player rect touching a lose block
+    playerRects.forEach((rect) => {
+        if (isLoseBlock(rect.x, rect.y)) {
+            emitParticles(particles, rect.x, rect.y)
+        }
+    })
+    // Start hide timer, then undo after timer completes
+    hideTimer.onComplete = () => undoLastMove()
+    startTimer(hideTimer)
+}
+
+const handleShrink = (dirX: number, dirY: number) => {
+    // If player only has one segment, treat as lose condition
+    if (playerRects.length <= 1) {
+        handleLoseCondition()
+        return
+    }
+    // Remove the tail segment
+    playerRects.pop()
+    handleMove(dirX, dirY)
 }
 
 const handleMove = (dirX: number, dirY: number) => {
@@ -146,10 +177,14 @@ const handleDirectionInput = (dirX: number, dirY: number) => {
     // only allow if there is nothing colliding at target position
     if (!isCollision(newRectX, newRectY) && !playerAtPos(newRectX, newRectY)) {
         savePlayerState()
-        if (isCollectible(newRectX, newRectY)) {
-            collectItem(newRectX, newRectY)
+        if (isGrowItem(newRectX, newRectY)) {
+            collectGrowItem(newRectX, newRectY)
             emitParticles(particles, newRectX, newRectY)
             handleExpand(dirX, dirY)
+        } else if (isShrinkItem(newRectX, newRectY)) {
+            collectShrinkItem(newRectX, newRectY)
+            emitParticles(particles, newRectX, newRectY)
+            handleShrink(dirX, dirY)
         } else {
             handleMove(dirX, dirY)
         }
@@ -240,7 +275,8 @@ export const updatePlayer = (dt: number) => {
             const shouldFall = playerRects.every(
                 (rect) =>
                     !isCollision(rect.x, rect.y + 1) &&
-                    !isCollectible(rect.x, rect.y + 1),
+                    !isGrowItem(rect.x, rect.y + 1) &&
+                    !isShrinkItem(rect.x, rect.y + 1),
             )
             if (shouldFall) {
                 playerRects.forEach((r) => (r.dy = 1))
@@ -275,15 +311,7 @@ export const updatePlayer = (dt: number) => {
 
             // Check lose condition after movement completes
             if (checkLoseCondition()) {
-                // Emit particles for each player rect touching a lose block
-                playerRects.forEach((rect) => {
-                    if (isLoseBlock(rect.x, rect.y)) {
-                        emitParticles(particles, rect.x, rect.y)
-                    }
-                })
-                // Start hide timer, then undo after timer completes
-                hideTimer.onComplete = () => undoLastMove()
-                startTimer(hideTimer)
+                handleLoseCondition()
             }
         }
     }
@@ -291,7 +319,7 @@ export const updatePlayer = (dt: number) => {
 
 export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
     // Render particles
-    ctx.fillStyle = "black"
+    ctx.fillStyle = BLACK
     renderParticles(particles, ctx)
 
     // Don't render player if hide timer is active
@@ -396,7 +424,7 @@ export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
 
     ctx.beginPath()
     ctx.roundRect(xPos, yPos, FACE_SIZE, FACE_SIZE, FACE_ROUNDNESS)
-    ctx.fillStyle = "black"
+    ctx.fillStyle = BLACK
     ctx.fill()
 
     //// left ear
@@ -424,7 +452,7 @@ export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
     ctx.ellipse(xPos + 15 + 1, yPos + 20 + 2, 2, 4, 0, 0, Math.PI * 2)
     ctx.ellipse(xPos + 45 + 1, yPos + 20 + 2, 2, 4, 0, 0, Math.PI * 2)
     ctx.closePath()
-    ctx.fillStyle = "black"
+    ctx.fillStyle = BLACK
     ctx.fill()
 
     // nose
@@ -444,7 +472,7 @@ export const renderPlayer = (ctx: CanvasRenderingContext2D) => {
 }
 
 export const checkWinCondition = (): boolean =>
-    isWinBlock(playerRects[0].x, playerRects[0].y) && allCollectiblesCollected()
+    isWinBlock(playerRects[0].x, playerRects[0].y) && allGrowItemsCollected()
 
 export const checkLoseCondition = (): boolean => {
     return playerRects.some((rect) => isLoseBlock(rect.x, rect.y))

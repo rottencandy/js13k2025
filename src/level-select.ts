@@ -44,11 +44,6 @@ const startLevel = (levelIndex: number) => {
 }
 
 export const updateLevelSelect = () => {
-    if (keys.btnp.esc) {
-        setScene(Scene.Title)
-        return
-    }
-
     // Handle keyboard navigation
     if (keys.btnp.lf) {
         let newLevel = selectedLevel - 1

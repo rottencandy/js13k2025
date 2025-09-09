@@ -1,10 +1,11 @@
 import { cam } from "./camera"
-import { CELL_SIZE, DDBLUE, DGREEN, LORANGE, WHITE } from "./const"
+import { CELL_SIZE, DDBLUE, DGREEN, DRED, LORANGE, WHITE } from "./const"
 import {
     STATIC1,
     WIN,
     LOSE,
-    COLLECTIBLE,
+    GROW_ITEM,
+    SHRINK_ITEM,
     STATIC3,
     STATIC2,
 } from "./data/level-data"
@@ -24,16 +25,18 @@ export interface RenderableItem {
 
 let renderables: RenderableItem[] = []
 let levelLayout: number[][] = []
-let collectibles: { x: number; y: number }[] = []
-let collectibleBounce = 0
+let growItems: { x: number; y: number }[] = []
+let shrinkItems: { x: number; y: number }[] = []
+let itemHoverAmount = 0
 let winParticles = createParticleSystem(1, 10)
 let winBlock: { x: number; y: number } | null = null
 
 export const initLevel = (level: number[][]) => {
     renderables = []
     levelLayout = level
-    collectibles = []
-    collectibleBounce = 0
+    growItems = []
+    shrinkItems = []
+    itemHoverAmount = 0
     winBlock = null
 
     for (let row = 0; row < level.length; row++) {
@@ -45,15 +48,18 @@ export const initLevel = (level: number[][]) => {
                 cellType === STATIC3 ||
                 cellType === WIN ||
                 cellType === LOSE ||
-                cellType === COLLECTIBLE
+                cellType === GROW_ITEM ||
+                cellType === SHRINK_ITEM
             ) {
                 renderables.push({
                     x: col * CELL_SIZE,
                     y: row * CELL_SIZE,
                     type: cellType,
                 })
-                if (cellType === COLLECTIBLE) {
-                    collectibles.push({ x: col, y: row })
+                if (cellType === GROW_ITEM) {
+                    growItems.push({ x: col, y: row })
+                } else if (cellType === SHRINK_ITEM) {
+                    shrinkItems.push({ x: col, y: row })
                 } else if (cellType === WIN) {
                     winBlock = { x: col, y: row }
                 }
@@ -65,11 +71,11 @@ export const initLevel = (level: number[][]) => {
 let frameCount = 0
 export const updateLevel = (dt: number) => {
     frameCount += 1
-    collectibleBounce += dt * 0.005
+    itemHoverAmount += dt * 0.005
 
     updateParticles(winParticles, dt)
 
-    if (allCollectiblesCollected() && winBlock && frameCount % 20 === 0) {
+    if (allGrowItemsCollected() && winBlock && frameCount % 20 === 0) {
         emitParticles(winParticles, winBlock.x, winBlock.y, 2)
     }
 }
@@ -79,18 +85,18 @@ export const renderLevel = (ctx: CanvasRenderingContext2D) => {
         const posX = item.x - cam.x
         const posY = item.y - cam.y
         const type = item.type
-        if (type === COLLECTIBLE) {
-            const bounce = Math.sin(collectibleBounce)
+        if (type === GROW_ITEM || type === SHRINK_ITEM) {
+            const bounce = Math.sin(itemHoverAmount)
 
             ctx.translate(posX + CELL_SIZE / 4, posY + CELL_SIZE / 4 + bounce)
             ctx.shadowColor = WHITE
-            ctx.shadowBlur = 10 * (Math.sin(collectibleBounce / 2) * 0.5 + 0.5)
-            ctx.fillStyle = DGREEN
+            ctx.shadowBlur = 10 * (Math.sin(itemHoverAmount / 2) * 0.5 + 0.5)
+            ctx.fillStyle = type === GROW_ITEM ? DGREEN : DRED
             ctx.fill(SVG_FISH)
             ctx.setTransform(1, 0, 0, 1, 0, 0)
             ctx.shadowBlur = 0
         } else if (type === WIN) {
-            if (allCollectiblesCollected()) {
+            if (allGrowItemsCollected()) {
                 ctx.strokeStyle = LORANGE
             } else {
                 ctx.strokeStyle = DDBLUE
@@ -150,7 +156,7 @@ export const renderLevel = (ctx: CanvasRenderingContext2D) => {
         }
     }
 
-    if (allCollectiblesCollected()) {
+    if (allGrowItemsCollected()) {
         ctx.fillStyle = LORANGE
         ctx.lineWidth = 1
         renderParticles(winParticles, ctx)
@@ -197,29 +203,50 @@ export const isLoseBlock = (x: number, y: number): boolean => {
     return levelLayout[y][x] === LOSE
 }
 
-export const isCollectible = (x: number, y: number): boolean => {
-    return collectibles.some((c) => c.x === x && c.y === y)
+export const isGrowItem = (x: number, y: number): boolean => {
+    return growItems.some((c) => c.x === x && c.y === y)
 }
 
-export const collectItem = (x: number, y: number) => {
-    const index = collectibles.findIndex((c) => c.x === x && c.y === y)
+export const isShrinkItem = (x: number, y: number): boolean => {
+    return shrinkItems.some((c) => c.x === x && c.y === y)
+}
+
+export const collectGrowItem = (x: number, y: number) => {
+    const index = growItems.findIndex((c) => c.x === x && c.y === y)
     const renderIndex = renderables.findIndex(
         (c) => c.x === x * CELL_SIZE && c.y === y * CELL_SIZE,
     )
     if (index !== -1) {
-        collectibles.splice(index, 1)
+        growItems.splice(index, 1)
     }
     if (renderIndex !== -1) {
         renderables.splice(renderIndex, 1)
     }
 }
 
-export const allCollectiblesCollected = (): boolean => {
-    return collectibles.length === 0
+export const collectShrinkItem = (x: number, y: number) => {
+    const index = shrinkItems.findIndex((c) => c.x === x && c.y === y)
+    const renderIndex = renderables.findIndex(
+        (c) => c.x === x * CELL_SIZE && c.y === y * CELL_SIZE,
+    )
+    if (index !== -1) {
+        shrinkItems.splice(index, 1)
+    }
+    if (renderIndex !== -1) {
+        renderables.splice(renderIndex, 1)
+    }
 }
 
-export const getCollectibles = () => {
-    return collectibles
+export const allGrowItemsCollected = (): boolean => {
+    return growItems.length === 0
+}
+
+export const getGrowItems = () => {
+    return growItems
+}
+
+export const getShrinkItems = () => {
+    return shrinkItems
 }
 
 export const getRenderables = () => {
@@ -227,9 +254,11 @@ export const getRenderables = () => {
 }
 
 export const restoreGameState = (
-    newCollectibles: { x: number; y: number }[],
+    newGrowItems: { x: number; y: number }[],
     newRenderables: { x: number; y: number; type: number }[],
+    newShrinkItems: { x: number; y: number }[],
 ) => {
-    collectibles = [...newCollectibles]
+    growItems = [...newGrowItems]
     renderables = [...newRenderables]
+    shrinkItems = [...newShrinkItems]
 }
