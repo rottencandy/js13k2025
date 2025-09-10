@@ -17,22 +17,59 @@ import {
     DDBLUE,
 } from "./const"
 import { getCompletedLevels, isLevelAvailable } from "./core/localstorage"
+import {
+    createParticleSystem,
+    updateParticles,
+    renderParticles,
+    ParticleSystem,
+    emitUIParticles,
+} from "./particle-system"
+import { cam } from "./camera"
 
 const GRID_SIZE = 60
 const PADDING = 20
 const START_X = 50
 const START_Y = 150
 const COLS = Math.floor((800 - PADDING * 2) / (GRID_SIZE + PADDING))
+const PARTICLE_COUNT = 32
+const PARTICLE_SIZE = 16
 
 let selectedLevel = 0
 const levelScales: number[] = []
+let celebrationParticles: ParticleSystem
+let lastCompletedLevel = -1
 
 export const initLevelSelect = () => {
     // Initialize scales for all levels
     for (let i = 0; i < levelsData.length; i++) {
         levelScales[i] = 1
     }
-    startTransitionAnimation(WIDTH / 2, HEIGHT / 2, true, DDBLUE)
+    // Initialize particle system for celebrations
+    celebrationParticles = createParticleSystem(PARTICLE_SIZE, PARTICLE_COUNT)
+    // reset camera
+    cam.x = 0
+    cam.y = 0
+
+    startTransitionAnimation(WIDTH / 2, HEIGHT / 2, true, DDBLUE, () => {
+        // Emit celebration particles for the last completed level
+        if (lastCompletedLevel >= 0) {
+            const col = lastCompletedLevel % COLS
+            const row = Math.floor(lastCompletedLevel / COLS)
+            const levelX = START_X + col * (GRID_SIZE + PADDING) + GRID_SIZE / 2
+            const levelY = START_Y + row * (GRID_SIZE + PADDING) + GRID_SIZE / 2
+            emitUIParticles(
+                celebrationParticles,
+                levelX,
+                levelY,
+                PARTICLE_COUNT,
+            )
+            lastCompletedLevel = -1 // Reset after emitting
+        }
+    })
+}
+
+export const setLastCompletedLevel = (levelIndex: number) => {
+    lastCompletedLevel = levelIndex
 }
 
 const startLevel = (levelIndex: number) => {
@@ -43,7 +80,10 @@ const startLevel = (levelIndex: number) => {
     })
 }
 
-export const updateLevelSelect = () => {
+export const updateLevelSelect = (dt: number) => {
+    // Update celebration particles
+    updateParticles(celebrationParticles, dt)
+
     // Handle keyboard navigation
     if (keys.btnp.lf) {
         let newLevel = selectedLevel - 1
@@ -188,4 +228,8 @@ export const renderLevelSelect = (
             )
         }
     }
+
+    // Render celebration particles
+    ctx.fillStyle = GREEN
+    renderParticles(celebrationParticles, ctx)
 }

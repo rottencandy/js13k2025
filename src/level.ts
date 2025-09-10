@@ -1,13 +1,14 @@
 import { cam } from "./camera"
 import { CELL_SIZE, DDBLUE, DGREEN, DRED, LORANGE, WHITE } from "./const"
 import {
-    STATIC1,
     WIN,
     LOSE,
     GROW_ITEM,
     SHRINK_ITEM,
+    STATIC1,
     STATIC3,
     STATIC2,
+    STATIC4,
 } from "./data/level-data"
 import { SPRITES, SVG_FISH, SVG_SPIRAL } from "./svg"
 import {
@@ -46,6 +47,7 @@ export const initLevel = (level: number[][]) => {
                 cellType === STATIC1 ||
                 cellType === STATIC2 ||
                 cellType === STATIC3 ||
+                cellType === STATIC4 ||
                 cellType === WIN ||
                 cellType === LOSE ||
                 cellType === GROW_ITEM ||
@@ -153,6 +155,18 @@ export const renderLevel = (ctx: CanvasRenderingContext2D) => {
                 CELL_SIZE,
                 CELL_SIZE,
             )
+        } else if (type === STATIC4) {
+            ctx.drawImage(
+                SPRITES,
+                144 * 4,
+                0,
+                144,
+                144,
+                posX,
+                posY,
+                CELL_SIZE,
+                CELL_SIZE,
+            )
         }
     }
 
@@ -174,7 +188,12 @@ export const isCollision = (x: number, y: number): boolean => {
         return true
     }
     const block = levelLayout[y][x]
-    return block === STATIC1 || block === STATIC2 || block === STATIC3
+    return (
+        block === STATIC1 ||
+        block === STATIC2 ||
+        block === STATIC3 ||
+        block === STATIC4
+    )
 }
 
 export const isWinBlock = (x: number, y: number): boolean => {
@@ -238,7 +257,7 @@ export const collectShrinkItem = (x: number, y: number) => {
 }
 
 export const allGrowItemsCollected = (): boolean => {
-    return growItems.length === 0
+    return growItems.length === 0 && shrinkItems.length === 0
 }
 
 export const getGrowItems = () => {

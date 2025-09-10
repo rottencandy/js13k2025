@@ -37,7 +37,8 @@ import { saveGameState, undoLastMove as undoLastGameMove } from "./undo-system"
 import { EASEOUTQUAD, THERENBACK, lerp, randInt } from "./core/math"
 import { Scene, setScene } from "./scene-manager"
 import { markLevelCompleted } from "./core/localstorage"
-import { getCurrentLevel } from "./level-manager"
+import { getCurrentLevel, loadLevel } from "./level-manager"
+import { setLastCompletedLevel } from "./level-select"
 
 const MOVE_SPEED = 0.005
 const FALL_SPEED = 0.008
@@ -125,6 +126,12 @@ const undoLastMove = () => {
         }))
         restoreGameState(state.growItems, state.renderables, state.shrinkItems)
     }
+}
+
+const resetLevel = () => {
+    startTransitionAnimation(WIDTH / 2, HEIGHT / 2, false, DDBLUE, () => {
+        loadLevel(getCurrentLevel())
+    })
 }
 
 const handleExpand = (dirX: number, dirY: number) => {
@@ -246,6 +253,8 @@ export const updatePlayer = (dt: number) => {
             handleDirectionInput(+1, 0)
         } else if (keys.btnp.undo) {
             undoLastMove()
+        } else if (keys.btnp.reset) {
+            resetLevel()
         }
     }
 
@@ -296,7 +305,9 @@ export const updatePlayer = (dt: number) => {
 
             // Check win condition after movement completes
             if (checkWinCondition()) {
-                markLevelCompleted(getCurrentLevel())
+                const currentLevelIndex = getCurrentLevel()
+                markLevelCompleted(currentLevelIndex)
+                setLastCompletedLevel(currentLevelIndex)
                 const head = playerRects[0]
                 startTransitionAnimation(
                     head.x * CELL_SIZE - cam.x + CELL_SIZE / 2,

@@ -1,0 +1,27 @@
+<svg width="720" height="144" viewBox="0 0 720 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+<rect width="144" height="144" x="0" y="0" fill="#c3664e"/>
+<rect width="144" height="29" x="0" y="0" fill="#00d98b"/>
+<circle cx="105" cy="70" r="12" fill="#ac5541"/>
+<circle cx="40" cy="100" r="8" fill="#ac5541"/>
+
+<rect width="144" height="144" x="144" y="0" fill="#c3664e"/>
+<rect width="144" height="29" x="144" y="0" fill="#00d98b"/>
+<circle cx="240" cy="29" r="12" fill="#00d98b"/>
+<circle cx="192" cy="64" r="8" fill="#ac5541"/>
+
+<rect width="144" height="144" x="288" y="0" fill="#c3664e"/>
+<rect width="144" height="29" x="288" y="0" fill="#00d98b"/>
+<circle cx="336" cy="29" r="12" fill="#00d98b"/>
+<circle cx="384" cy="29" r="8" fill="#00d98b"/>
+
+<path d="M484 48l16-32a5 5 0 0 1 8 0l16 32-40 0" fill="#c5bdb6" stroke="#000000" />
+<path d="M484 96l16 32a5 5 0 0 0 8 0l16-32-40 0" fill="#c5bdb6" stroke="#000000" />
+<path d="M528 52l32 16a5 5 0 0 1 0 8l-32 16 0-40" fill="#c5bdb6" stroke="#000000" />
+<path d="M480 52l-32 16a5 5 0 0 0 0 8l32 16 0-40" fill="#c5bdb6" stroke="#000000" />
+<path d="M480 48l48 0 0 48-48 0 0-48 48 48m0-48-48 48" stroke-linejoin="round" fill="#c3664e" stroke="#ac5541" stroke-width="10" />
+
+<rect width="144" height="144" x="576" y="0" fill="#c3664e" />
+<circle cx="610" cy="69" r="12" fill="#ac5541" />
+<circle cx="675" cy="106" r="8" fill="#ac5541" />
+</svg>

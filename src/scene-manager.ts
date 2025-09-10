@@ -1,4 +1,4 @@
-import { loadLevel, updateLevel, renderLevel } from "./level-manager"
+import { updateLevel, renderLevel } from "./level-manager"
 import { updateTitleScreen, renderTitleScreen } from "./title-screen"
 import {
     updateLevelSelect,
@@ -26,7 +26,6 @@ export const setScene = (scene: Scene) => {
             initLevelSelect()
             break
         case Scene.Game:
-            loadLevel(0)
             break
     }
 }
@@ -38,7 +37,7 @@ export const updateScene = (dt: number) => {
             updateTitleScreen()
             break
         case Scene.LevelSelect:
-            updateLevelSelect()
+            updateLevelSelect(dt)
             break
         case Scene.Game:
             updateLevel(dt)

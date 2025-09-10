@@ -55,8 +55,35 @@ export const emitParticles = (
         const index = getDeadParticleIndex(system)
         if (index === -1) break // No available particles
 
-        const angle = Math.random() * Math.PI * 2
+        const angle = rand(0, Math.PI * 2)
         const speed = rand(0.05, 0.1)
+
+        system.x[index] = centerX
+        system.y[index] = centerY
+        system.vx[index] = Math.cos(angle) * speed
+        system.vy[index] = Math.sin(angle) * speed
+        system.life[index] = PARTICLE_LIFE
+        system.maxLife[index] = PARTICLE_LIFE
+        system.alive[index] = true
+
+        if (index >= system.particleCount) {
+            system.particleCount = index + 1
+        }
+    }
+}
+
+export const emitUIParticles = (
+    system: ParticleSystem,
+    centerX: number,
+    centerY: number,
+    count: number = 8,
+) => {
+    for (let i = 0; i < count; i++) {
+        const index = getDeadParticleIndex(system)
+        if (index === -1) break // No available particles
+
+        const angle = rand(0, Math.PI * 2)
+        const speed = rand(0.1, 0.3)
 
         system.x[index] = centerX
         system.y[index] = centerY

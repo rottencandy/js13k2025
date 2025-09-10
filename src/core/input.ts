@@ -1,22 +1,34 @@
-import { touchButtons, updateTouchControls } from "src/touch-controls"
+import {
+    touchButtons,
+    uiButtons,
+    updateTouchControls,
+} from "src/touch-controls"
 
 export const keys = {
     hasTouch: false,
     ptr: { x: 0, y: 0 },
     ptrDown: { x: 0, y: 0 },
     btn: {
-        sel: false,
+        up: false,
+        lf: false,
+        dn: false,
+        rt: false,
+
         clk: false,
+        sel: false,
         undo: false,
+        reset: false,
     },
     btnp: {
         up: false,
         lf: false,
         dn: false,
         rt: false,
+
         sel: false,
         clk: false,
         undo: false,
+        reset: false,
     },
 }
 
@@ -30,20 +42,27 @@ export const initInput = (
 ) => {
     let gamepad: Gamepad | undefined = undefined
     keys.hasTouch = "ontouchstart" in window
-    const dirPressed = {
+    const keyboardPressed = {
         up: false,
         lf: false,
         dn: false,
         rt: false,
+
+        clk: false,
+        sel: false,
+        undo: false,
+        reset: false,
     }
     const lastFrame = {
         up: false,
         lf: false,
         dn: false,
         rt: false,
-        sel: false,
+
         clk: false,
+        sel: false,
         undo: false,
+        reset: false,
     }
 
     const setKeyState =
@@ -52,22 +71,25 @@ export const initInput = (
             switch (code) {
                 case "ArrowUp":
                 case "KeyW":
-                    dirPressed.up = pressed
+                    keyboardPressed.up = pressed
                     break
                 case "ArrowDown":
                 case "KeyS":
-                    dirPressed.dn = pressed
+                    keyboardPressed.dn = pressed
                     break
                 case "ArrowLeft":
                 case "KeyA":
-                    dirPressed.lf = pressed
+                    keyboardPressed.lf = pressed
                     break
                 case "ArrowRight":
                 case "KeyD":
-                    dirPressed.rt = pressed
+                    keyboardPressed.rt = pressed
                     break
                 case "KeyZ":
-                    keys.btn.undo = pressed
+                    keyboardPressed.undo = pressed
+                    break
+                case "KeyR":
+                    keyboardPressed.reset = pressed
                     break
                 case "Space":
                 case "Enter":
@@ -122,15 +144,6 @@ export const initInput = (
     }
 
     return () => {
-        if (keys.hasTouch) {
-            updateTouchControls()
-            dirPressed.up = touchButtons[0].pressed
-            dirPressed.dn = touchButtons[1].pressed
-            dirPressed.lf = touchButtons[2].pressed
-            dirPressed.rt = touchButtons[3].pressed
-            keys.btn.undo = touchButtons[4].pressed
-        }
-
         if (keys.btn.clk) {
             keys.ptrDown = {
                 x: keys.ptr.x,
@@ -138,30 +151,59 @@ export const initInput = (
             }
         }
 
+        // first check keyboard buttons
+        keys.btn.up = keyboardPressed.up
+        keys.btn.dn = keyboardPressed.dn
+        keys.btn.lf = keyboardPressed.lf
+        keys.btn.rt = keyboardPressed.rt
+
+        keys.btn.sel = keyboardPressed.sel
+        keys.btn.undo = keyboardPressed.undo
+        keys.btn.reset = keyboardPressed.reset
+
+        // then check touch buttons
+        updateTouchControls()
+        keys.btn.up ||= touchButtons[0].pressed
+        keys.btn.dn ||= touchButtons[1].pressed
+        keys.btn.lf ||= touchButtons[2].pressed
+        keys.btn.rt ||= touchButtons[3].pressed
+
+        keys.btn.undo ||= uiButtons[0].pressed
+        keys.btn.reset ||= uiButtons[1].pressed
+
+        // then check gamepad buttons
         if (gamepad) {
             // standard layout https://w3c.github.io/gamepad/#remapping
-            keys.btn.sel = gamepad.buttons[0]?.pressed
-            keys.btn.undo = gamepad.buttons[1]?.pressed
-            dirPressed.up = gamepad.buttons[12]?.pressed
-            dirPressed.dn = gamepad.buttons[13]?.pressed
-            dirPressed.lf = gamepad.buttons[14]?.pressed
-            dirPressed.rt = gamepad.buttons[15]?.pressed
+            keys.btn.up ||= gamepad.buttons[12]?.pressed
+            keys.btn.dn ||= gamepad.buttons[13]?.pressed
+            keys.btn.lf ||= gamepad.buttons[14]?.pressed
+            keys.btn.rt ||= gamepad.buttons[15]?.pressed
+
+            keys.btn.sel ||= gamepad.buttons[0]?.pressed
+            keys.btn.undo ||= gamepad.buttons[1]?.pressed
+            keys.btn.reset ||= gamepad.buttons[2]?.pressed
         }
 
-        keys.btnp.up = dirPressed.up && !lastFrame.up
-        keys.btnp.dn = dirPressed.dn && !lastFrame.dn
-        keys.btnp.lf = dirPressed.lf && !lastFrame.lf
-        keys.btnp.rt = dirPressed.rt && !lastFrame.rt
+        // finally check if buttons are heldd
         keys.btnp.clk = keys.btn.clk && !lastFrame.clk
+        keys.btnp.up = keys.btn.up && !lastFrame.up
+        keys.btnp.dn = keys.btn.dn && !lastFrame.dn
+        keys.btnp.lf = keys.btn.lf && !lastFrame.lf
+        keys.btnp.rt = keys.btn.rt && !lastFrame.rt
+
         keys.btnp.sel = keys.btn.sel && !lastFrame.sel
         keys.btnp.undo = keys.btn.undo && !lastFrame.undo
+        keys.btnp.reset = keys.btn.reset && !lastFrame.reset
 
-        lastFrame.up = dirPressed.up
-        lastFrame.dn = dirPressed.dn
-        lastFrame.lf = dirPressed.lf
-        lastFrame.rt = dirPressed.rt
+        // save state for next frame
         lastFrame.clk = keys.btn.clk
+        lastFrame.up = keys.btn.up
+        lastFrame.dn = keys.btn.dn
+        lastFrame.lf = keys.btn.lf
+        lastFrame.rt = keys.btn.rt
+
         lastFrame.sel = keys.btn.sel
         lastFrame.undo = keys.btn.undo
+        lastFrame.reset = keys.btn.reset
     }
 }
