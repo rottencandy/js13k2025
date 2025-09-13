@@ -34,7 +34,7 @@ export const updateScene = (dt: number) => {
     updateTransitionAnimation(dt)
     switch (currentScene) {
         case Scene.Title:
-            updateTitleScreen()
+            updateTitleScreen(dt)
             break
         case Scene.LevelSelect:
             updateLevelSelect(dt)
@@ -45,17 +45,13 @@ export const updateScene = (dt: number) => {
     }
 }
 
-export const renderScene = (
-    ctx: CanvasRenderingContext2D,
-    width: number,
-    height: number,
-) => {
+export const renderScene = (ctx: CanvasRenderingContext2D) => {
     switch (currentScene) {
         case Scene.Title:
-            renderTitleScreen(ctx, width, height)
+            renderTitleScreen(ctx)
             break
         case Scene.LevelSelect:
-            renderLevelSelect(ctx, width, height)
+            renderLevelSelect(ctx)
             break
         case Scene.Game:
             renderLevel(ctx)

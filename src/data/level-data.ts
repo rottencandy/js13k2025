@@ -10,6 +10,7 @@ export const SHRINK_ITEM = 8
 export const PLAYER_HEAD = 9
 export const PLAYER_BODY = 10
 
+// prettier-ignore
 export const levelsData: number[][][] = [
     [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

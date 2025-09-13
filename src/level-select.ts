@@ -15,6 +15,7 @@ import {
     WHITE,
     BLUE,
     DDBLUE,
+    DPURPLE,
 } from "./const"
 import { getCompletedLevels, isLevelAvailable } from "./core/localstorage"
 import {
@@ -25,10 +26,20 @@ import {
     emitUIParticles,
 } from "./particle-system"
 import { cam } from "./camera"
+import {
+    playMenuHoverSound,
+    playMenuSelectSound,
+    startMusicLoop,
+    stopMusicLoop,
+} from "./synth"
+import {
+    renderScrollingBackdrop,
+    updateScrollingBackdrop,
+} from "./title-screen"
 
-const GRID_SIZE = 60
-const PADDING = 20
-const START_X = 50
+const GRID_SIZE = 80
+const PADDING = 50
+const START_X = 120
 const START_Y = 150
 const COLS = Math.floor((800 - PADDING * 2) / (GRID_SIZE + PADDING))
 const PARTICLE_COUNT = 32
@@ -69,6 +80,7 @@ export const initLevelSelect = () => {
 }
 
 export const setLastCompletedLevel = (levelIndex: number) => {
+    stopMusicLoop()
     lastCompletedLevel = levelIndex
 }
 
@@ -77,10 +89,19 @@ const startLevel = (levelIndex: number) => {
     startTransitionAnimation(WIDTH / 2, HEIGHT / 2, false, DDBLUE, () => {
         loadLevel(levelIndex)
         setScene(Scene.Game)
+        startMusicLoop()
     })
 }
 
+const setHoveredLevel = (level: number) => {
+    if (selectedLevel !== level) {
+        selectedLevel = level
+        playMenuHoverSound()
+    }
+}
+
 export const updateLevelSelect = (dt: number) => {
+    updateScrollingBackdrop(dt)
     // Update celebration particles
     updateParticles(celebrationParticles, dt)
 
@@ -90,28 +111,28 @@ export const updateLevelSelect = (dt: number) => {
         while (newLevel >= 0 && !isLevelAvailable(newLevel)) {
             newLevel--
         }
-        if (newLevel >= 0) selectedLevel = newLevel
+        if (newLevel >= 0) setHoveredLevel(newLevel)
     }
     if (keys.btnp.rt) {
         let newLevel = selectedLevel + 1
         while (newLevel < levelsData.length && !isLevelAvailable(newLevel)) {
             newLevel++
         }
-        if (newLevel < levelsData.length) selectedLevel = newLevel
+        if (newLevel < levelsData.length) setHoveredLevel(newLevel)
     }
     if (keys.btnp.up) {
         let newLevel = selectedLevel - COLS
         while (newLevel >= 0 && !isLevelAvailable(newLevel)) {
             newLevel -= COLS
         }
-        if (newLevel >= 0) selectedLevel = newLevel
+        if (newLevel >= 0) setHoveredLevel(newLevel)
     }
     if (keys.btnp.dn) {
         let newLevel = selectedLevel + COLS
         while (newLevel < levelsData.length && !isLevelAvailable(newLevel)) {
             newLevel += COLS
         }
-        if (newLevel < levelsData.length) selectedLevel = newLevel
+        if (newLevel < levelsData.length) setHoveredLevel(newLevel)
     }
 
     // Handle level selection with space or enter
@@ -128,13 +149,14 @@ export const updateLevelSelect = (dt: number) => {
             isLevelAvailable(levelIndex)
         ) {
             startLevel(levelIndex)
+            playMenuSelectSound()
         }
     }
 
     // Update selected level on hover
     const hoveredLevel = getLevelAtPosition(keys.ptr.x, keys.ptr.y)
     if (hoveredLevel >= 0 && isLevelAvailable(hoveredLevel)) {
-        selectedLevel = hoveredLevel
+        setHoveredLevel(hoveredLevel)
     }
 
     // Update scale targets and interpolate for all levels
@@ -161,13 +183,12 @@ const getLevelAtPosition = (x: number, y: number): number => {
     return -1
 }
 
-export const renderLevelSelect = (
-    ctx: CanvasRenderingContext2D,
-    width: number,
-    height: number,
-) => {
-    ctx.fillStyle = DDGREEN
-    ctx.fillRect(0, 0, width, height)
+export const renderLevelSelect = (ctx: CanvasRenderingContext2D) => {
+    renderScrollingBackdrop(ctx)
+
+    ctx.roundRect(80, 100, WIDTH - 130, HEIGHT - 200, 25)
+    ctx.fillStyle = DPURPLE
+    ctx.fill()
 
     // Level grid
     const completedLevels = getCompletedLevels()

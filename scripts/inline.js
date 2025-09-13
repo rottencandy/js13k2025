@@ -16,7 +16,7 @@ const ctx = await esbuild.context({
                 {
                     filename: "index.html",
                     entryPoints: ["app/main.js", "app/app.css"],
-                    title: "untitled-game",
+                    title: "non-newtonian-cat",
                     inline: {
                         js: true,
                         css: true,

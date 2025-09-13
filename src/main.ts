@@ -31,6 +31,6 @@ loop(
         ctx.fillStyle = BLACK
         ctx.fillRect(0, 0, WIDTH, HEIGHT)
 
-        renderScene(ctx, WIDTH, HEIGHT)
+        renderScene(ctx)
     },
 )

@@ -39,6 +39,15 @@ import { Scene, setScene } from "./scene-manager"
 import { markLevelCompleted } from "./core/localstorage"
 import { getCurrentLevel, loadLevel } from "./level-manager"
 import { setLastCompletedLevel } from "./level-select"
+import {
+    playFallSound,
+    playGrowSound,
+    playHurtSound,
+    playInvlaidSound,
+    playMoveSound,
+    playShrinkSound,
+    playWinSound,
+} from "./synth"
 
 const MOVE_SPEED = 0.005
 const FALL_SPEED = 0.008
@@ -137,7 +146,20 @@ const resetLevel = () => {
 const handleExpand = (dirX: number, dirY: number) => {
     const head = playerRects[0]
     playerRects.unshift({ x: head.x, y: head.y, dx: dirX, dy: dirY })
+    playGrowSound()
     isMoving = true
+}
+
+const handleShrink = (dirX: number, dirY: number) => {
+    // If player only has one segment, treat as lose condition
+    if (playerRects.length <= 1) {
+        handleLoseCondition()
+        return
+    }
+    playShrinkSound()
+    // Remove the tail segment
+    playerRects.pop()
+    handleMove(dirX, dirY)
 }
 
 const handleLoseCondition = () => {
@@ -147,20 +169,10 @@ const handleLoseCondition = () => {
             emitParticles(particles, rect.x, rect.y)
         }
     })
+    playHurtSound()
     // Start hide timer, then undo after timer completes
     hideTimer.onComplete = () => undoLastMove()
     startTimer(hideTimer)
-}
-
-const handleShrink = (dirX: number, dirY: number) => {
-    // If player only has one segment, treat as lose condition
-    if (playerRects.length <= 1) {
-        handleLoseCondition()
-        return
-    }
-    // Remove the tail segment
-    playerRects.pop()
-    handleMove(dirX, dirY)
 }
 
 const handleMove = (dirX: number, dirY: number) => {
@@ -194,12 +206,14 @@ const handleDirectionInput = (dirX: number, dirY: number) => {
             handleShrink(dirX, dirY)
         } else {
             handleMove(dirX, dirY)
+            playMoveSound()
         }
     } else {
         // show blocked animation when player cannot move
         isBlocked = true
         blockedProgress = 0
         blockedDirection = { x: dirX, y: dirY }
+        playInvlaidSound()
     }
 }
 
@@ -213,9 +227,13 @@ export const updatePlayer = (dt: number) => {
     updateParticles(particles, dt)
 
     // Update timers
+    updateTimer(hideTimer, dt)
+    // Don't update further if hide timer is active
+    if (isTimerActive(hideTimer)) {
+        return
+    }
     breathTime += dt / BREATH_SPEED
     tailMoveTime += dt / tailMoveSpeed
-    updateTimer(hideTimer, dt)
     if (updateTimer(blinkTimer, dt)) {
         resetTimer(blinkTimer, randInt(500, 7000))
         blinkProgress = 0
@@ -300,12 +318,16 @@ export const updatePlayer = (dt: number) => {
                 //        }
                 //    })
                 //}
-                isFalling = false
+                if (isFalling) {
+                    playFallSound()
+                    isFalling = false
+                }
             }
 
             // Check win condition after movement completes
             if (checkWinCondition()) {
                 const currentLevelIndex = getCurrentLevel()
+                playWinSound()
                 markLevelCompleted(currentLevelIndex)
                 setLastCompletedLevel(currentLevelIndex)
                 const head = playerRects[0]

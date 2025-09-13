@@ -1,19 +1,7 @@
 // config
 export const DEBUG = false
-export const WIDTH = 1280
-export const HEIGHT = 720
-export const JOYSTICK_SIZE = 30
-export const JOYSTICK_THUMB_SIZE = 10
-
-// ui
-export const FONT_SIZE = 1
-export const MENU_FONT_SIZE = 3
-export const UI_BAR_WIDTH = WIDTH / 2
-export const UI_BAR_HEIGHT = 5
-export const UI_TEXT_DURATION = 300
-export const UI_BAR_X = ~~((WIDTH - UI_BAR_WIDTH) / 7)
-export const UI_BAR_Y = 10
-export const UI_TRANSITION_DURATION = 900
+export const WIDTH = 1920
+export const HEIGHT = 1080
 
 // color palette
 // https://lospec.com/palette-list/lemonade

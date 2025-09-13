@@ -185,7 +185,7 @@ export const isCollision = (x: number, y: number): boolean => {
         x < 0 ||
         x >= levelLayout[0].length
     ) {
-        return true
+        return false
     }
     const block = levelLayout[y][x]
     return (
@@ -217,6 +217,10 @@ export const isLoseBlock = (x: number, y: number): boolean => {
         x < 0 ||
         x >= levelLayout[0].length
     ) {
+        // player has fallen off the map
+        if (y > 10) {
+            return true
+        }
         return false
     }
     return levelLayout[y][x] === LOSE
