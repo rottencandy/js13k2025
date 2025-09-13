@@ -90,7 +90,7 @@ export const renderLevel = (ctx: CanvasRenderingContext2D) => {
         if (type === GROW_ITEM || type === SHRINK_ITEM) {
             const bounce = Math.sin(itemHoverAmount)
 
-            ctx.translate(posX + CELL_SIZE / 4, posY + CELL_SIZE / 4 + bounce)
+            ctx.translate(posX, posY + CELL_SIZE / 4 + bounce)
             ctx.shadowColor = WHITE
             ctx.shadowBlur = 10 * (Math.sin(itemHoverAmount / 2) * 0.5 + 0.5)
             ctx.fillStyle = type === GROW_ITEM ? DGREEN : DRED

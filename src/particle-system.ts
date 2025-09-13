@@ -83,7 +83,7 @@ export const emitUIParticles = (
         if (index === -1) break // No available particles
 
         const angle = rand(0, Math.PI * 2)
-        const speed = rand(0.1, 0.3)
+        const speed = rand(0.2, 0.4)
 
         system.x[index] = centerX
         system.y[index] = centerY

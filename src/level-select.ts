@@ -5,7 +5,6 @@ import { loadLevel } from "./level-manager"
 import { pointInRect, lerp } from "./core/math"
 import { startTransitionAnimation } from "./transition-animation"
 import {
-    DDGREEN,
     HEIGHT,
     WIDTH,
     BLACK,
@@ -16,6 +15,7 @@ import {
     BLUE,
     DDBLUE,
     DPURPLE,
+    LYELLOW,
 } from "./const"
 import { getCompletedLevels, isLevelAvailable } from "./core/localstorage"
 import {
@@ -26,22 +26,17 @@ import {
     emitUIParticles,
 } from "./particle-system"
 import { cam } from "./camera"
-import {
-    playMenuHoverSound,
-    playMenuSelectSound,
-    startMusicLoop,
-    stopMusicLoop,
-} from "./synth"
+import { playMenuHoverSound, playMenuSelectSound } from "./synth"
 import {
     renderScrollingBackdrop,
     updateScrollingBackdrop,
 } from "./title-screen"
 
-const GRID_SIZE = 80
+const GRID_SIZE = 200
 const PADDING = 50
 const START_X = 120
 const START_Y = 150
-const COLS = Math.floor((800 - PADDING * 2) / (GRID_SIZE + PADDING))
+const COLS = Math.floor((WIDTH - PADDING * 2) / (GRID_SIZE + PADDING))
 const PARTICLE_COUNT = 32
 const PARTICLE_SIZE = 16
 
@@ -80,7 +75,6 @@ export const initLevelSelect = () => {
 }
 
 export const setLastCompletedLevel = (levelIndex: number) => {
-    stopMusicLoop()
     lastCompletedLevel = levelIndex
 }
 
@@ -89,7 +83,6 @@ const startLevel = (levelIndex: number) => {
     startTransitionAnimation(WIDTH / 2, HEIGHT / 2, false, DDBLUE, () => {
         loadLevel(levelIndex)
         setScene(Scene.Game)
-        startMusicLoop()
     })
 }
 
@@ -251,6 +244,13 @@ export const renderLevelSelect = (ctx: CanvasRenderingContext2D) => {
     }
 
     // Render celebration particles
-    ctx.fillStyle = GREEN
+    ctx.fillStyle = LGREEN
     renderParticles(celebrationParticles, ctx)
+
+    if (completedLevels.size === levelsData.length) {
+        ctx.font = "30px Arial"
+        ctx.textAlign = "center"
+        ctx.fillStyle = LYELLOW
+        ctx.fillText("THANK YOU FOR PLAYING!", WIDTH / 2, HEIGHT - 200)
+    }
 }

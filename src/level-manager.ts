@@ -40,10 +40,9 @@ export const loadLevel = (levelIndex: number) => {
 
     for (let row = 0; row < currentLevelData.length; row++) {
         for (let col = 0; col < currentLevelData[row].length; col++) {
-            if (currentLevelData[row][col] === PLAYER_HEAD) {
+            const tile = currentLevelData[row][col]
+            if (tile === PLAYER_HEAD || tile === PLAYER_BODY) {
                 playerRects.unshift({ x: col, y: row, dx: 0, dy: 0 })
-            } else if (currentLevelData[row][col] === PLAYER_BODY) {
-                playerRects.push({ x: col, y: row, dx: 0, dy: 0 })
             }
         }
     }

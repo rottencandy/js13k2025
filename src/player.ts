@@ -92,7 +92,7 @@ let tailMoveSpeed = tailSpeedTimer.duration
 let particles: ParticleSystem
 let blockedDirection = { x: 0, y: 0 }
 
-export const initPlayer = (rects: Rect[] = [{ x: 0, y: 0, dx: 0, dy: 0 }]) => {
+export const initPlayer = (rects: Rect[]) => {
     playerRects = rects.map((rect) => ({ ...rect, dx: 0, dy: 0 }))
     isMoving = false
     isFalling = false

@@ -12,7 +12,7 @@ import {
 } from "./const"
 import { startTransitionAnimation } from "./transition-animation"
 import { SVG_LOGO } from "./svg"
-import { initSynth } from "./synth"
+import { initSynth, startMusicLoop } from "./synth"
 
 const scrollOffset = { x: 0, y: 0 }
 const TILE_SIZE = 80
@@ -28,6 +28,7 @@ export const updateTitleScreen = (dt: number) => {
 
     if (keys.btnp.sel || keys.btn.clk) {
         initSynth()
+        startMusicLoop()
         startTransitionAnimation(WIDTH / 2, HEIGHT / 2, false, DDBLUE, () => {
             setScene(Scene.LevelSelect)
         })
