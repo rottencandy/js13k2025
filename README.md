@@ -30,4 +30,6 @@ npm run all
 
 ## Credits
 
-- todo
+music: https://github.com/phoboslab/pl_synth
+color palette: https://lospec.com/palette-list/lemonade
+assets: https://nonemo.itch.io/farm-jump-asset-kit

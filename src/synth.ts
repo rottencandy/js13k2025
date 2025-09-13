@@ -107,7 +107,7 @@ const playBufferSource = (
 }
 
 export const startMusicLoop = () => {
-    musicSource = playBufferSource(musicSource, musicBuffer)
+    musicSource = playBufferSource(musicSource, musicBuffer, true)
 }
 
 export const stopMusicLoop = () => {
