@@ -69,14 +69,23 @@ export const initSynth = () => {
     plSynth = pl_synth_init(audioContext)
 
     musicBuffer = plSynth.song(tuneData)
+    menuHoverBuffer = plSynth.sound(menuHoverInstrument, 142)
+    menuSelectBuffer = plSynth.sound(menuHoverInstrument)
+    moveBuffer = plSynth.sound(moveInstrument)
+    invalidBuffer = plSynth.sound(invalidInstrument)
+    fallBuffer = plSynth.sound(fallSound)
+    hurtBuffer = plSynth.sound(hurtSound)
+    growBuffer = plSynth.sound(growSound)
+    shrinkBuffer = plSynth.sound(shrinkSound)
+    winBuffer = plSynth.sound(winSound)
 
-    return musicBuffer
+    return plSynth
 }
 
 const playBufferSource = (
     src: AudioBufferSourceNode | undefined,
     buffer: AudioBuffer,
-    loop?: boolean,
+    loop = false,
 ) => {
     if (src) {
         src.stop()
@@ -85,9 +94,7 @@ const playBufferSource = (
     src = audioContext.createBufferSource()
     src.buffer = buffer
     src.connect(audioContext.destination)
-    if (loop) {
-        src.loop = true
-    }
+    src.loop = loop
     src.start()
     src.context.state
     src.onended = () => {
@@ -98,7 +105,7 @@ const playBufferSource = (
 }
 
 export const startMusicLoop = () => {
-    musicSource = playBufferSource(musicSource, musicBuffer)
+    musicSource = playBufferSource(musicSource, musicBuffer, true)
 }
 
 export const stopMusicLoop = () => {

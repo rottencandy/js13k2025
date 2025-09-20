@@ -93,7 +93,7 @@ export const initInput = (
                     break
                 case "Space":
                 case "Enter":
-                    keys.btn.sel = pressed
+                    keyboardPressed.sel = pressed
                     break
             }
         }
