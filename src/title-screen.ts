@@ -90,5 +90,5 @@ export const renderTitleScreen = (ctx: CanvasRenderingContext2D) => {
     ctx.fillStyle = DGREEN
     ctx.font = "bold 24px Arial"
     ctx.fillText("made by saud", textX, textY + 450)
-    ctx.fillText("js13kgames 2025", textX, textY + 500)
+    ctx.fillText("originally for js13kgames 2025", textX, textY + 500)
 }
