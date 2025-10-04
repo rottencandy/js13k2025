@@ -1,5 +1,5 @@
 import { cam } from "./camera"
-import { CELL_SIZE, DDBLUE, DGREEN, DRED, LORANGE, WHITE } from "./const"
+import { CELL_SIZE, DDBLUE, DGREEN, LORANGE, LRED, WHITE } from "./const"
 import {
     WIN,
     LOSE,
@@ -93,7 +93,7 @@ export const renderLevel = (ctx: CanvasRenderingContext2D) => {
             ctx.translate(posX, posY + CELL_SIZE / 4 + bounce)
             ctx.shadowColor = WHITE
             ctx.shadowBlur = 10 * (Math.sin(itemHoverAmount / 2) * 0.5 + 0.5)
-            ctx.fillStyle = type === GROW_ITEM ? DGREEN : DRED
+            ctx.fillStyle = type === GROW_ITEM ? DGREEN : LRED
             ctx.fill(SVG_FISH)
             ctx.setTransform(1, 0, 0, 1, 0, 0)
             ctx.shadowBlur = 0
